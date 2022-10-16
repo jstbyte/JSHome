@@ -4,16 +4,13 @@
 #include <FS.h>
 #define SPIFFS LittleFS
 #include <LittleFS.h>
-/* Check ESP Board */
-#ifdef ESP32
+#ifdef ESP32 /* Check ESP Board */
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #endif
-/* Include All Other Library */
-#include <ESPAsyncWebServer.h>
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
 #include <AsyncElegantOTA.h>
@@ -23,7 +20,6 @@
 #include <IRrecv.h>
 #include <regex.h>
 #include <time.h>
-/* My Won Library */
 #include "Debouncer.h"
 #include "uUtils.h"
 #include "Dio.h"
@@ -86,12 +82,11 @@ void setup()
 
     pinMode(LED_BUILTIN, OUTPUT);
     analogWrite(LED_BUILTIN, 254);
-
     irrecv.enableIRIn();
+
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid_sta, password);
     WiFi.setAutoReconnect(true);
-    WiFi.persistent(true);
 
     eventEmitter.setCallback(emittEvent, 500);
     certStore.initCertStore(LittleFS, "/certs.idx", "/certs.ar");
