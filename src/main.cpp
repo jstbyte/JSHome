@@ -1,28 +1,18 @@
 #include <Arduino.h>
 #include "credentials.h"
-/* Fixed SPIFFS Error */
-#include <FS.h>
-#define SPIFFS LittleFS
 #include <LittleFS.h>
-#ifdef ESP32 /* Check ESP Board */
-#include <WiFi.h>
-#include <AsyncTCP.h>
-#elif defined(ESP8266)
+#define SPIFFS LittleFS
 #include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
-#endif
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
-#include <AsyncElegantOTA.h>
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
 #include <IRutils.h>
 #include <IRrecv.h>
-#include <regex.h>
 #include <time.h>
-#include "Debouncer.h"
-#include "uUtils.h"
+#include <regex>
 #include "Dio.h"
+#include "uUtils.h"
+#include "Debouncer.h"
 
 /* WiFi Credentials */
 const char *ssid_sta = WIFI_SSID;
