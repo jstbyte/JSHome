@@ -20,8 +20,8 @@ const char *password = WIFI_PASS;
 
 /* MQTT Refs */
 BearSSL::CertStore certStore;
-BearSSL::WiFiClientSecure wifiClint;
-PubSubClient mqttClient(wifiClint);
+BearSSL::WiFiClientSecure wifiClient;
+PubSubClient mqttClient(wifiClient);
 
 /* IR Refs */
 decode_results ir_result;
@@ -81,7 +81,7 @@ void setup()
     eventEmitter.setCallback(emittEvent, 500);
     certStore.initCertStore(LittleFS, "/certs.idx", "/certs.ar");
 
-    wifiClint.setCertStore(&certStore);
+    wifiClient.setCertStore(&certStore);
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);
     mqttClient.setCallback(mqttCallback);
 }
