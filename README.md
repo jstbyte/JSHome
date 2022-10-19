@@ -1,5 +1,5 @@
 # Instruction!
-> Environment: MY_ROOM > Require "credentials.h"
+> Environment: ESP_RCTRL > Require "credentials.h"
 ```cpp 
 #pragma once
 
@@ -16,6 +16,6 @@
 const char *mqtt_topic_dio = "secrat.domain.dev/req/switch";
 
 ```
-> Environment: MY_ROOM > Required Data Files;
+> Environment: ESP_RCTRL > Required Data Files;
 - certs.ar ( Archive file containing .der certificates for MQTT client )
 - dio.json ( Json array of pin numbers ) eg. [5, 4, 14, 12]
