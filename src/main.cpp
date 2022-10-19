@@ -13,13 +13,14 @@
 #include "Dio.h"
 #include "uUtils.h"
 #include "Debouncer.h"
+#include "MQTT_CERT.h"
 
 /* WiFi Credentials */
 const char *ssid_sta = WIFI_SSID;
 const char *password = WIFI_PASS;
 
 /* MQTT Refs */
-BearSSL::CertStore certStore;
+BearSSL::X509List cert(mqtt_cert);
 BearSSL::WiFiClientSecure wifiClient;
 PubSubClient mqttClient(wifiClient);
 
@@ -79,9 +80,7 @@ void setup()
     WiFi.setAutoReconnect(true);
 
     eventEmitter.setCallback(emittEvent, 500);
-    certStore.initCertStore(LittleFS, "/certs.idx", "/certs.ar");
-
-    wifiClient.setCertStore(&certStore);
+    wifiClient.setTrustAnchors(&cert);
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);
     mqttClient.setCallback(mqttCallback);
 }

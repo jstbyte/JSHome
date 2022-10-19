@@ -17,5 +17,5 @@ const char *mqtt_topic_dio = "secrat.domain.dev/req/switch";
 
 ```
 > Environment: ESP_RCTRL > Required Data Files;
-- certs.ar ( Archive file containing .der certificates for MQTT client )
+- MQTT_CERT.h ( CA Cert Embaded Into Program Memory )
 - dio.json ( Json array of pin numbers ) eg. [5, 4, 14, 12]
