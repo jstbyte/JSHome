@@ -78,6 +78,7 @@ void setup()
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid_sta, password);
     WiFi.setAutoReconnect(true);
+    WiFi.persistent(false);
 
     eventEmitter.setCallback(emittEvent, 500);
     wifiClient.setTrustAnchors(&cert);
