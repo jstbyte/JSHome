@@ -1,4 +1,20 @@
-#include <Arduino.h>
+#pragma once
+#include <app_common.h>
+#include <WiFiClientSecure.h>
+#include <CertStoreBearSSL.h>
+#include <PubSubClient.h>
+#include <time.h>
+#include <regex>
+
+extern BearSSL::WiFiClientSecure wifiClient;
+extern PubSubClient mqttClient;
+extern int wifiRetryTimeout;
+
+void setupMqtt();
+void handleMqtt();
+void emmittMqttEvent();
+
+/* Mqtt SSL/TLS CA Root Certificate */
 const char mqtt_cert[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
 MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh

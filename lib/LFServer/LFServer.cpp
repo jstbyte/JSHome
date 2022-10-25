@@ -1,10 +1,4 @@
-#pragma once
-#include <ESPAsyncWebServer.h>
-
-/* Fixed SPIFFS Errors */
-#include <FS.h>
-#define SPIFFS LittleFS
-#include <LittleFS.h>
+#include "LFServer.h"
 
 String getContentType(String path)
 {
@@ -80,7 +74,6 @@ void handleStaticAssets(AsyncWebServerRequest *req)
     notFoundHandler(req);
 };
 
-#define INDEX_HTML "/index.html.gz"
 void registerLittleFServer(AsyncWebServer *server)
 {
 
