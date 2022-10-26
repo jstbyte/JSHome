@@ -22,8 +22,8 @@ public:
     uint8_t getIndexByPin(uint8_t pin);
     bool add(uint8_t pin); // Add A Pin
     void load(uint8_t pins[], uint8_t pinCount);
-    uint8_t load(String path);              // Returns Loaded Pins Count
-    void write(uint8_t idx, uint8_t state); // 0 | 1 | >1
+    uint8_t load(String path, bool states = false); // Returns Loaded Pins Count From FS;
+    void write(uint8_t idx, uint8_t state);         // 0 | 1 | >1
     void write(uint8_t idx);
     void writes();
     void writes(uint8_t state);

@@ -1,6 +1,6 @@
 #include "app_mqtt.h"
 
-int wifiRetryTimeout = WIFI_RETRY_TIMEOUT;
+u32_t wifiRetryTimeout = WIFI_RETRY_TIMEOUT;
 unsigned long long wifiRetryTimeStamp = 0;
 
 const char *mqtt_topic_digi_out = MQTT_TOPIC_DIGI_OUT;
@@ -38,7 +38,7 @@ void handleMqtt()
             {
                 wifiRetryTimeStamp = millis(); // Take A TimeStamp for Timeout;
             }
-            else if ((int)(millis() - wifiRetryTimeStamp) > wifiRetryTimeout)
+            else if ((u32_t)(millis() - wifiRetryTimeStamp) > wifiRetryTimeout)
             {
                 reBoot(0);
             }
@@ -84,13 +84,32 @@ void emmittMqttEvent()
     DEBUG_LOG_LN("MQTT Event Emitted");
 }
 
-void setupMqtt()
+wlan_config_t loadWlanConfig(String path)
+{
+    wlan_config_t config;
+    StaticJsonDocument<256> wConfigDoc;
+    File configFile = LittleFS.open(path, "r");
+    if (deserializeJson(wConfigDoc, configFile) == DeserializationError::Ok)
+    {
+        config.ssid = wConfigDoc["wlanSSID"].as<String>();
+        config.pass = wConfigDoc["wlanPASS"].as<String>();
+        config.host = wConfigDoc["hostName"].as<String>();
+        configFile.close();
+        return config;
+    }
+    DEBUG_LOG_LN("WLAN Config DeserializationError");
+
+    reBoot(0);
+    return config;
+}
+
+void setupMqtt(wlan_config_t *config)
 {
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    WiFi.begin(config->ssid, config->pass);
     WiFi.setAutoReconnect(true);
-    WiFi.setHostname(HOST_NAME);
+    WiFi.setHostname(config->host.c_str());
 
     wifiClient.setTrustAnchors(&cert);
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);

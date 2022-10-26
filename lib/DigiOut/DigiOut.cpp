@@ -62,13 +62,32 @@ void DigiOut::load(uint8_t *pns, uint8_t pCount)
     }
 }
 
-uint8_t DigiOut::load(String path) /* Returns Loaded Pins Count */
+uint8_t DigiOut::load(String path, bool states) /* Returns Loaded Pins Count */
 {
-    pinCount = 0;
     File file = LittleFS.open(path, "r");
     StaticJsonDocument<128> jdoc;
+
     if (deserializeJson(jdoc, file) == DeserializationError::Ok)
     {
+        if (states) /* Load DigiOut Pins Default State */
+        {
+            uint8_t index = 0;
+            for (JsonVariant v : jdoc.as<JsonArray>())
+            {
+                if (index <= pinCount)
+                {
+                    pins[index] = v.as<u8>();
+                    pinMode(pins[index], OUTPUT);
+                    index++;
+                    continue;
+                }
+                break;
+            }
+            file.close();
+            return index;
+        }
+
+        pinCount = 0; /* Load DigiOut Pins */
         for (JsonVariant v : jdoc.as<JsonArray>())
         {
             if (pinCount < MAX_DIO_PIN_COUNT)

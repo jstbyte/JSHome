@@ -6,13 +6,21 @@
 #include <time.h>
 #include <regex>
 
+typedef struct
+{
+    String ssid;
+    String pass;
+    String host;
+} wlan_config_t;
+
 extern BearSSL::WiFiClientSecure wifiClient;
 extern PubSubClient mqttClient;
-extern int wifiRetryTimeout;
+extern u32_t wifiRetryTimeout;
 
-void setupMqtt();
+void setupMqtt(wlan_config_t *config);
 void handleMqtt();
 void emmittMqttEvent();
+wlan_config_t loadWlanConfig(String path);
 
 /* Mqtt SSL/TLS CA Root Certificate */
 const char mqtt_cert[] PROGMEM = R"EOF(

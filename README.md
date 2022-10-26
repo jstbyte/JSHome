@@ -3,14 +3,8 @@
 ```cpp
 
 #pragma once
-#define HOST_NAME "Device Name"
-#define WIFI_SSID "SSID Name"
-#define WIFI_PASS "Paskey"
-
-#define SERIAL_DEBUG_LOG /* ENABLE DEBUGING */
-
-#define WIFI_RETRY_TIMEOUT 0 /* WiFi Only: 1 */
-
+#define SERIAL_DEBUG_LOG     /* ENABLE DEBUGING */
+#define WIFI_RETRY_TIMEOUT 1 /* WiFi Only: 1 */
 #define IR_RECV_PIN 13
 
 #define MQTT_HOST "broker.emqx.io"
@@ -27,6 +21,25 @@
     }
 
 ```
-> Environment: ESP_RCTRL > Required Data Files;
-- ( CA Cert Embaded Into Program Memory in app_mqtt.h )
-- dio.json ( Json array of pin numbers ) eg. [5, 4, 14, 12] !DON'T USE LED_BUILDIN PIN!
+> Environment: ESP_RCTRL > Required Data Files Below;
+
+```cpp
+/* ( CA Cert Embaded Into Program Memory in app_mqtt.h ) */
+```
+
+```json
+/* data/config/digio_pins.json */ [5, 4, 14, 12]
+```
+
+```json
+/* data/config/digio_stat.json */ [1, 1, 1, 1]
+```
+
+```json
+/* data/config/wlan_conf.json */
+{
+  "identity": "secrat.domain.dev",
+  "wlanSSID": "wlan-ssid",
+  "wlanPASS": "wlan-pass",
+  "hostName": "host-name"
+} ```

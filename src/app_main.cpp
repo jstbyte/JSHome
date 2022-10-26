@@ -7,7 +7,7 @@
 RTCMemory<RTCState> rtcMemory;
 DebounceDigiOut digiOut;
 
-void reBoot(int retryTimeout) /* Set States to RTCMemory & Restart */
+void reBoot(u32_t retryTimeout) /* Set States to RTCMemory & Restart */
 {
     auto *rtcData = rtcMemory.getData();
     rtcData->bootCount++;
@@ -23,18 +23,7 @@ void reBoot(int retryTimeout) /* Set States to RTCMemory & Restart */
 
 void recoverReboot() /* Retrive & Set States From RTC Memory */
 {
-    if (!rtcMemory.begin())
-    {
-        RTCState *rtcData = rtcMemory.getData();
-        rtcData->wifiRetryTimeout = wifiRetryTimeout;
-        for (u8 i = 0; i < digiOut.count(); i++)
-        {
-            rtcData->pinStates[i] = HIGH;
-        }
-        digiOut.writes(HIGH);
-        rtcMemory.save();
-    }
-    else
+    if (rtcMemory.begin())
     {
         RTCState *rtcData = rtcMemory.getData();
         wifiRetryTimeout = rtcData->wifiRetryTimeout;
@@ -45,6 +34,17 @@ void recoverReboot() /* Retrive & Set States From RTC Memory */
         DEBUG_LOG("\nRTC Memory Found : ")
         DEBUG_LOG_LN(digiOut.reads())
     }
+    else
+    {
+        RTCState *rtcData = rtcMemory.getData();
+        rtcData->wifiRetryTimeout = wifiRetryTimeout;
+        digiOut.load("/config/digio_stat.json", true);
+        for (u8 i = 0; i < digiOut.count(); i++)
+        {
+            rtcData->pinStates[i] = digiOut.read(i);
+        }
+        rtcMemory.save();
+    }
 }
 
 void setup()
@@ -52,7 +52,7 @@ void setup()
     LittleFS.begin();
     Serial.begin(9600);
     irrecv.enableIRIn();
-    digiOut.load("/dio.json");
+    digiOut.load("/config/digio_pins.json");
     recoverReboot();
 
     DEBUG_LOG("WiFi Retry Timeout : ")
@@ -62,8 +62,9 @@ void setup()
 
     if (wifiRetryTimeout)
     {
-        setupMqtt();
+        auto wlanConf = loadWlanConfig("/config/wlan_conf.json");
         digiOut.setCallback(emmittMqttEvent, 500);
+        setupMqtt(&wlanConf);
     }
     else
     {

@@ -14,11 +14,11 @@ typedef struct
 {
     u8_t bootCount;
     bool pinStates[7];
-    int wifiRetryTimeout; // 0 = ESPNOW_MODE;
+    u32_t wifiRetryTimeout; // 0 = ESPNOW_MODE;
 } RTCState;
 
 extern DebounceDigiOut digiOut;
 extern RTCMemory<RTCState> rtcMemory;
 
 void recoverReboot();
-void reBoot(int wifiRetryTimeout);
+void reBoot(u32_t wifiRetryTimeout);
