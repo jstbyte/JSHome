@@ -76,8 +76,7 @@ uint8_t DigiOut::load(String path, bool states) /* Returns Loaded Pins Count */
             {
                 if (index <= pinCount)
                 {
-                    pins[index] = v.as<u8>();
-                    pinMode(pins[index], OUTPUT);
+                    digitalWrite(pins[index], v.as<u8>());
                     index++;
                     continue;
                 }

@@ -1,9 +1,9 @@
 #pragma once
-#include <app_common.h>
 #include <IRutils.h>
 #include <IRrecv.h>
 
-#pragma once
+#define IR_RECV_PIN 13 /* Can Be Change */
+
 #define IR_POWER 0x1FE48B7
 #define IR_MODE 0x1FE58A7
 #define IR_MUTE 0x1FE7887

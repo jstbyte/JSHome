@@ -1,8 +1,8 @@
 #ifdef ESP_RCTRL
 #include "app_common.h"
-#include "app_mqtt.h"
-#include "app_espnow.h"
 #include "app_infared.h"
+#include "app_espnow.h"
+#include "app_mqtt.h"
 
 RTCMemory<RTCState> rtcMemory;
 DebounceDigiOut digiOut;
@@ -36,14 +36,7 @@ void recoverReboot() /* Retrive & Set States From RTC Memory */
     }
     else
     {
-        RTCState *rtcData = rtcMemory.getData();
-        rtcData->wifiRetryTimeout = wifiRetryTimeout;
         digiOut.load("/config/digio_stat.json", true);
-        for (u8 i = 0; i < digiOut.count(); i++)
-        {
-            rtcData->pinStates[i] = digiOut.read(i);
-        }
-        rtcMemory.save();
     }
 }
 
@@ -62,13 +55,12 @@ void setup()
 
     if (wifiRetryTimeout)
     {
-        auto wlanConf = loadWlanConfig("/config/wlan_conf.json");
         digiOut.setCallback(emmittMqttEvent, 500);
-        setupMqtt(&wlanConf);
+        setupMqtt("/config/wlan_conf.json");
     }
     else
     {
-        setupEspNow();
+        setupEspNow("/config/espn_conf.json");
         digiOut.setCallback(emmittEspNowEvent, 500);
     }
 }

@@ -1,3 +1,4 @@
+#include <app_common.h>
 #include "app_infared.h"
 
 decode_results ir_result;

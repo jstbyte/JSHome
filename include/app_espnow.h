@@ -1,8 +1,16 @@
 #pragma once
-#include <app_common.h>
 #include <espnow.h>
+#include <ESP8266WiFi.h>
+#include <MsgPacketizer.h>
 
 extern uint8_t espnow_gateway_mac_addr[6];
+
+typedef struct
+{
+    u8_t channel;
+    u32_t timeout;
+    String gateway;
+} espnow_config_t;
 
 // MsgPacketizer Packet Types Index;
 enum PACKET_TYPES_INDEX
@@ -39,5 +47,6 @@ typedef struct
     MSGPACK_DEFINE(chipId, data);
 } pkt_digi_out_data_pack_t;
 
-void setupEspNow();
 void emmittEspNowEvent();
+void setupEspNow(String path);
+espnow_config_t loadEspnowConfig(String path);

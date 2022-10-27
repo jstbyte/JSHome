@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include <lwip-err-t.h>
 #ifdef SERIAL_DEBUG_LOG
 #define DEBUG_LOG(arg) (Serial.print(arg));
 #define DEBUG_LOG_LN(arg) (Serial.println(arg));

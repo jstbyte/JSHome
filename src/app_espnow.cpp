@@ -1,6 +1,7 @@
+#include <app_common.h>
 #include "app_espnow.h"
 
-uint8_t espnow_gateway_mac_addr[6] = ESPNOW_GATEWAY_MAC_ADDR;
+uint8_t espnow_gateway_mac_addr[6];
 
 void espnowRecvCallback(u8_t *mac, u8_t *payload, u8_t len)
 {
@@ -49,8 +50,31 @@ void on_pkt_digi_out_data_pack(pkt_digi_out_data_pack_t dodpack)
     DEBUG_LOG_LN("ESPNOW PKT_DIGI_OUT_DATA_PACK Recived!")
 }
 
-void setupEspNow()
+espnow_config_t loadEspnowConfig(String path)
 {
+    espnow_config_t config;
+    StaticJsonDocument<128> configDoc;
+    File configFile = LittleFS.open(path, "r");
+    if (deserializeJson(configDoc, configFile) == DeserializationError::Ok)
+    {
+        config.channel = configDoc["channel"].as<u8_t>();
+        config.timeout = configDoc["timeout"].as<u32_t>();
+        config.gateway = configDoc["gateway"].as<String>();
+
+        configFile.close();
+        return config;
+    }
+    DEBUG_LOG_LN("ESPNOW Config DeserializationError");
+
+    reBoot(1);
+    return config;
+}
+
+void setupEspNow(String path)
+{
+    auto config = loadEspnowConfig(path);
+    str2mac(config.gateway.c_str(), espnow_gateway_mac_addr);
+
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     esp_now_init();

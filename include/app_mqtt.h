@@ -1,25 +1,28 @@
 #pragma once
-#include <app_common.h>
-#include <WiFiClientSecure.h>
+#include <ESP8266WiFi.h>
 #include <CertStoreBearSSL.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <time.h>
 #include <regex>
 
 typedef struct
 {
-    String ssid;
-    String pass;
-    String host;
+    String identity;
+    String wlanSSID;
+    String wlanPASS;
+    String hostNAME;
+    String mqttHOST;
+    u32_t mqttPORT;
 } wlan_config_t;
 
 extern BearSSL::WiFiClientSecure wifiClient;
 extern PubSubClient mqttClient;
 extern u32_t wifiRetryTimeout;
 
-void setupMqtt(wlan_config_t *config);
 void handleMqtt();
 void emmittMqttEvent();
+void setupMqtt(String path);
 wlan_config_t loadWlanConfig(String path);
 
 /* Mqtt SSL/TLS CA Root Certificate */
