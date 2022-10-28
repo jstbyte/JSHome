@@ -48,6 +48,9 @@ void setup()
     digiOut.load("/config/digio_pins.json");
     recoverReboot();
 
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
+
     DEBUG_LOG("WiFi Retry Timeout : ")
     DEBUG_LOG_LN(wifiRetryTimeout)
     DEBUG_LOG("Device Mac Address : ");
@@ -67,9 +70,10 @@ void setup()
 
 void loop()
 {
-    handleMqtt();
+    MsgPacketizer::parse();
     handleInfared();
     digiOut.loop();
+    handleMqtt();
     delay(100);
 }
 #endif
