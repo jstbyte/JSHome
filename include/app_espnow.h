@@ -5,66 +5,74 @@
 
 extern uint8_t espnow_gateway_mac_addr[6];
 
+enum GATEWAY_STATUS
+{
+    GATEWAY_STATUS_NIL,
+    GATEWAY_STATUS_STD,
+    GATEWAY_STATUS_UART,
+    GATEWAY_STATUS_STD_CONNECTED,
+    GATEWAY_STATUS_UART_CONNECTED
+};
+
+enum PACKET_INDEX_TYPES
+{
+    PKT_NIL,             // Not Sure!;
+    PKT_WIFI_TIMEOUT,    // pkt_wifi_timeout_t
+    PKT_DIGIOUT_WRITE,   // pkt_digiout_write_t
+    PKT_DIGIOUT_WRITES,  // pkt_digiout_writes_t
+    PKT_DIGIOUT_EVENTS,  // pkt_digiout_events_t
+    PKT_GATEWAY_STATUS,  // pkt_gateway_status_t
+    PKT_REGISTER_DEVICE, // pkt_device_info_t
+    /* Extra Pakages */
+    PKT_GATEWAY_DATA_PIPE // pkt_gateway_data_pipe_t
+};
+
+typedef u32_t pkt_device_id_t;
+typedef u8_t pkt_wifi_timeout_t;
+typedef u8_t pkt_gateway_status_t;
+
+typedef struct
+{
+    pkt_device_id_t id;
+    MsgPack::str_t mac;
+    MSGPACK_DEFINE(id, mac);
+} pkt_device_info_t;
+
+typedef struct
+{
+    u8_t index;
+    u8_t state;
+    bool trigger;
+    MSGPACK_DEFINE(index, state, trigger);
+} pkt_digiout_write_t;
+
+typedef struct
+{
+    bool trigger;
+    MsgPack::str_t states;
+    MSGPACK_DEFINE(states, trigger);
+} pkt_digiout_writes_t;
+
+typedef struct
+{
+    pkt_device_id_t id;
+    MsgPack::str_t data;
+    MSGPACK_DEFINE(id, data);
+} pkt_digiout_events_t;
+
+typedef struct
+{
+    MsgPack::str_t mac;
+    MsgPack::arr_t<u8_t> payload;
+    MSGPACK_DEFINE(mac, payload)
+} pkt_gateway_data_pipe_t;
+
 typedef struct
 {
     u8_t channel;
     u32_t timeout;
     String gateway;
 } espnow_config_t;
-
-enum GATEWAY_LINK_TYPES
-{
-    GATEWAY_LINK_NA,
-    GATEWAY_LINK_STD,
-    GATEWAY_LINK_UART,
-    GATEWAY_LINK_DATA_REQUEST,
-    GATEWAY_LINK_STD_CONNECTED,
-    GATEWAY_LINK_UART_CONNECTED
-};
-
-// MsgPacketizer Packet Types Index;
-enum PACKET_TYPES_INDEX
-{
-    PKT_NULL,
-    PKT_WIFI_BOOT,
-    PKT_GATEWAY_LINK,
-    PKT_GATEWAY_PIPE,
-    PKT_DIGI_OUT_DATA,
-    PKT_DIGI_OUT_DATA_PACK,
-};
-
-typedef u32_t pkt_wifi_boot_t;
-typedef u8_t pkt_gateway_find_t;
-
-typedef struct
-{
-    u32_t chipId;
-    u8_t linkType;
-    MsgPack::str_t macAddr;
-    MSGPACK_DEFINE(chipId, linkType, macAddr);
-} pkt_gateway_link_t;
-
-typedef struct
-{
-    uint8_t index;
-    uint8_t state;
-    uint8_t reply;
-    MSGPACK_DEFINE(index, state, reply);
-} pkt_digi_out_data_t;
-
-typedef struct
-{
-    uint32_t chipId;
-    MsgPack::str_t data;
-    MSGPACK_DEFINE(chipId, data);
-} pkt_digi_out_data_pack_t;
-
-typedef struct
-{
-    MsgPack::str_t mac;
-    MsgPack::arr_t<u8_t> payload;
-    MSGPACK_DEFINE(mac, payload);
-} pkt_gateway_pipe_t;
 
 void emmittEspNowEvent();
 void setupEspNow(String path);
