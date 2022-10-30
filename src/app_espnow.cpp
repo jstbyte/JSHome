@@ -87,36 +87,80 @@ void onPktDigioutWrites(pkt_digiout_writes_t data)
     DEBUG_LOG_LN(data.states)
 }
 
+/* UART Gateway Proxy Handlers */
+void onRegReq(pkt_device_info_t devInfo)
+{
+    MsgPacketizer::send(Serial, PKT_REGISTER_DEVICE, devInfo);
+
+    pkt_gateway_status_t status = GATEWAY_STATUS_STD;
+    if (gatewayStatus == GATEWAY_STATUS_UART_CONNECTED)
+    {
+        status = GATEWAY_STATUS_STD_CONNECTED;
+    }
+
+    u8_t mac[6];
+    str2mac(devInfo.mac.c_str(), mac);
+    const auto &packet = MsgPacketizer::encode(PKT_GATEWAY_STATUS, status);
+    esp_now_send(mac, (u8_t *)packet.data.data(), packet.data.size());
+}
+
+void onPktDigioutEvents(pkt_digiout_events_t event)
+{
+    MsgPacketizer::send(Serial, PKT_DIGIOUT_EVENTS, event);
+}
+
 void onPktGatewayStatus(pkt_gateway_status_t status)
 {
-    /* Only Linked Gateway Can Be Connected To Internet */
-    if (status == GATEWAY_STATUS_UART && gatewayStatus != GATEWAY_STATUS_UART_CONNECTED)
+    gatewayStatus = status;
+    DEBUG_LOG("ESPNOW Gateway Status Recived: ");
+    DEBUG_LOG_LN(status);
+}
+
+void onPktUartGatewayStatus(pkt_gateway_status_t status)
+{
+    if (status == gatewayStatus)
     {
-        MsgPacketizer::subscribe(Serial, PKT_WIFI_TIMEOUT, &reBoot);
-        MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITE, &onPktDigioutWrite);
-        MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
-        MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
+        return; /* Save Time & Memory */
+    }
 
-        MsgPacketizer::subscribe(
-            Serial,
-            PKT_GATEWAY_DATA_PIPE,
-            [&](pkt_gateway_data_pipe_t pipe)
-            {
-                u8_t mac[6];
-                str2mac(pipe.mac.c_str(), mac);
-                esp_now_send(mac, pipe.payload.data(), pipe.payload.size());
-            });
+    /* Broadcast Address */
+    u8_t mac[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    const auto &packet = MsgPacketizer::encode(PKT_GATEWAY_STATUS, status);
 
-        MsgPacketizer::subscribe_manual(
-            PKT_GATEWAY_DATA_PIPE,
-            [&](pkt_gateway_data_pipe_t pipe)
-            {
-                Serial.write(pipe.payload.data(), pipe.payload.size());
-            });
+    if (gatewayStatus == GATEWAY_STATUS_UART || gatewayStatus == GATEWAY_STATUS_UART_CONNECTED)
+    {
+        esp_now_send(mac, (u8_t *)packet.data.data(), packet.data.size());
+        gatewayStatus = status;
+        return;
     }
     gatewayStatus = status;
-    DEBUG_LOG("Gateway Status Recived: ");
-    DEBUG_LOG_LN(status);
+
+    MsgPacketizer::subscribe(Serial, PKT_WIFI_TIMEOUT, &reBoot);
+    MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITE, &onPktDigioutWrite);
+    MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
+    MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
+
+    MsgPacketizer::subscribe(
+        Serial,
+        PKT_GATEWAY_DATA_PIPE,
+        [&](pkt_gateway_data_pipe_t pipe)
+        {
+            u8_t mac[6];
+            str2mac(pipe.mac.c_str(), mac);
+            esp_now_send(mac, pipe.payload.data(), pipe.payload.size());
+        });
+
+    /* GateWay Spacific Only */
+    MsgPacketizer::subscribe_manual(PKT_DIGIOUT_EVENTS, &onPktDigioutEvents);
+    MsgPacketizer::subscribe_manual(PKT_REGISTER_DEVICE, &onRegReq);
+    MsgPacketizer::subscribe_manual(
+        PKT_GATEWAY_DATA_PIPE,
+        [&](pkt_gateway_data_pipe_t pipe)
+        {
+            Serial.write(pipe.payload.data(), pipe.payload.size());
+        });
+
+    esp_now_send(mac, (u8_t *)packet.data.data(), packet.data.size());
 }
 
 void setupEspNow(String path)
@@ -136,17 +180,13 @@ void setupEspNow(String path)
     MsgPacketizer::subscribe_manual(PKT_GATEWAY_STATUS, &onPktGatewayStatus);
     DEBUG_LOG_LN("ESPNOW Setup Complate")
 
-// TODO: Run Only On Fist Boot;
 #ifndef SERIAL_DEBUG_LOG
+    MsgPacketizer::subscribe(Serial, PKT_GATEWAY_STATUS, &onPktUartGatewayStatus);
     if (rtcMemory.getData()->bootCount == 0)
     {
         regReq();
     }
 #else
     regReq();
-#endif
-
-#ifndef SERIAL_DEBUG_LOG
-    MsgPacketizer::subscribe(Serial, PKT_GATEWAY_STATUS, &onPktGatewayStatus);
 #endif
 }
