@@ -44,7 +44,8 @@ void handleMqtt()
             {
                 reBoot(0);
             }
-            DEBUG_LOG_LN("MQTT Trying to connect...");
+            DEBUG_LOG(wifiRetryTimeout - (u32_t)(millis() - wifiRetryTimeStamp));
+            DEBUG_LOG_LN("ms Remaining, MQTT Connecting...");
         }
     }
 }

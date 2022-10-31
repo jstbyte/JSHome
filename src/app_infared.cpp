@@ -1,5 +1,6 @@
 #include <app_common.h>
 #include "app_infared.h"
+#include "app_mqtt.h"
 
 decode_results ir_result;
 IRrecv irrecv(IR_RECV_PIN);
@@ -14,6 +15,10 @@ void handleInfared()
         bool notify = true;
         switch (ir_result.value)
         {
+        case IR_EQ:
+            if (wifiRetryTimeout == 0 && WIFI_RETRY_TIMEOUT > 1)
+                reBoot(WIFI_RETRY_TIMEOUT);
+            break;
         case IR_POWER:
             if (digiOut.read() == HIGH)
             {

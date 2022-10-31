@@ -75,5 +75,6 @@ void loop()
     digiOut.loop();
     handleMqtt();
     delay(100);
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 }
 #endif

@@ -7,7 +7,7 @@
 #include "DigiOut.h"
 #include "Helper.h"
 
-#define WIFI_RETRY_TIMEOUT 1 /* WiFi Only: 1 */
+#define WIFI_RETRY_TIMEOUT 30000 /* WiFi Only: 1 */
 
 typedef struct
 {
