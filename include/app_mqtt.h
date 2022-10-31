@@ -16,8 +16,8 @@ typedef struct
     u32_t mqttPORT;
 } wlan_config_t;
 
-extern BearSSL::WiFiClientSecure wifiClient;
-extern PubSubClient mqttClient;
+extern WiFiClient *wifiClient;
+extern PubSubClient *mqttClient;
 extern u32_t wifiRetryTimeout;
 
 void handleMqtt();

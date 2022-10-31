@@ -16,6 +16,7 @@ typedef struct
     u32_t wifiRetryTimeout; // 0 = ESPNOW_MODE;
 } RTCState;
 
+extern u32_t wifiRetryTimeout;
 extern DebounceDigiOut digiOut;
 extern RTCMemory<RTCState> rtcMemory;
 

@@ -1,6 +1,5 @@
 #include <app_common.h>
 #include "app_infared.h"
-#include "app_mqtt.h"
 
 decode_results ir_result;
 IRrecv irrecv(IR_RECV_PIN);

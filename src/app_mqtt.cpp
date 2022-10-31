@@ -1,22 +1,20 @@
 #include <app_common.h>
 #include "app_mqtt.h"
 
-u32_t wifiRetryTimeout = WIFI_RETRY_TIMEOUT;
 unsigned long long wifiRetryTimeStamp = 0;
 
 String topicDigiOut = "{SECRAT}/req/digiout/+";
 String regexDigiOut = "^{SECRAT}\\/req\\/digiout\\/([1-8])$";
 
-BearSSL::WiFiClientSecure wifiClient;
-PubSubClient mqttClient(wifiClient);
-BearSSL::X509List cert(mqtt_cert);
+WiFiClient *wifiClient;
+PubSubClient *mqttClient;
 
 void handleMqtt()
 {
     if (wifiRetryTimeout)
     {
 
-        if (mqttClient.loop())
+        if (mqttClient->loop())
         {
             return;
         }
@@ -24,9 +22,9 @@ void handleMqtt()
         if (WiFi.isConnected())
         {
             configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-            if (mqttClient.connect(uuid("ESP8266JST-").c_str()))
+            if (mqttClient->connect(uuid("ESP8266JST-").c_str()))
             {
-                mqttClient.subscribe(topicDigiOut.c_str());
+                mqttClient->subscribe(topicDigiOut.c_str());
                 DEBUG_LOG_LN("Subscribed!");
                 wifiRetryTimeStamp = 0; // Give A Change To Retry When Disconnect;
                 digiOut.start();
@@ -83,7 +81,7 @@ void emmittMqttEvent()
     String topic = String(topicDigiOut.c_str());
     topic.replace("/req/", "/res/");
     topic.replace("/+", "");
-    mqttClient.publish(topic.c_str(), digiOut.reads().c_str());
+    mqttClient->publish(topic.c_str(), digiOut.reads().c_str());
     DEBUG_LOG_LN("MQTT Event Emitted");
 }
 
@@ -125,8 +123,21 @@ void setupMqtt(String path)
     char *mqttHost = new char[config.mqttHOST.length() + 1];
     strncpy(mqttHost, config.mqttHOST.c_str(), config.mqttHOST.length());
 
-    wifiClient.setTrustAnchors(&cert);
-    mqttClient.setServer(mqttHost, config.mqttPORT);
-    mqttClient.setCallback(mqttCallback);
+    mqttClient = new PubSubClient;
+    if (config.mqttPORT == 8883)
+    {
+        DEBUG_LOG_LN("Secure Mqtt Mode");
+        wifiClient = new BearSSL::WiFiClientSecure;
+        auto caCert = new BearSSL::X509List(mqtt_cert);
+        ((WiFiClientSecure *)wifiClient)->setTrustAnchors(caCert);
+    }
+    else
+    {
+        wifiClient = new WiFiClient;
+    }
+
+    mqttClient->setClient(*wifiClient);
+    mqttClient->setServer(mqttHost, config.mqttPORT);
+    mqttClient->setCallback(mqttCallback);
     DEBUG_LOG_LN("WIFI & MQTT Setup Complate")
 }

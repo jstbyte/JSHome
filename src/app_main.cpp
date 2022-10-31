@@ -4,6 +4,7 @@
 #include "app_espnow.h"
 #include "app_mqtt.h"
 
+u32_t wifiRetryTimeout = WIFI_RETRY_TIMEOUT;
 RTCMemory<RTCState> rtcMemory;
 DebounceDigiOut digiOut;
 
