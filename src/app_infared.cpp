@@ -18,6 +18,7 @@ void handleInfared()
         case IR_EQ:
             if (wifiRetryTimeout == 0 && WIFI_RETRY_TIMEOUT > 1)
                 reBoot(WIFI_RETRY_TIMEOUT);
+            notify = false;
             break;
         case IR_POWER:
             if (digiOut.read() == HIGH)
