@@ -23,13 +23,15 @@ enum PACKET_INDEX_TYPES
     PKT_DIGIOUT_EVENTS,  // pkt_digiout_events_t
     PKT_GATEWAY_STATUS,  // pkt_gateway_status_t
     PKT_REGISTER_DEVICE, // pkt_device_info_t
-    /* Extra Pakages */
-    PKT_GATEWAY_DATA_PIPE // pkt_gateway_data_pipe_t
+    /* Extra Packets */
+    PKT_GATEWAY_DATA_PIPE, // pkt_encoded_data_t
 };
 
 typedef u32_t pkt_device_id_t;
 typedef u8_t pkt_wifi_timeout_t;
 typedef u8_t pkt_gateway_status_t;
+/* MsgPacketizer::encoded >  Data */;
+typedef MsgPack::arr_t<u8_t> pkt_encoded_data_t;
 
 typedef struct
 {
@@ -59,13 +61,6 @@ typedef struct
     MsgPack::str_t data;
     MSGPACK_DEFINE(id, data);
 } pkt_digiout_events_t;
-
-typedef struct
-{
-    MsgPack::str_t mac;
-    MsgPack::arr_t<u8_t> payload;
-    MSGPACK_DEFINE(mac, payload)
-} pkt_gateway_data_pipe_t;
 
 typedef struct
 {

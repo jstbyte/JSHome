@@ -87,6 +87,13 @@ void onPktDigioutWrites(pkt_digiout_writes_t data)
     DEBUG_LOG_LN(data.states)
 }
 
+void onPktGatewayStatus(pkt_gateway_status_t status)
+{
+    gatewayStatus = status;
+    DEBUG_LOG("ESPNOW Gateway Status Recived: ");
+    DEBUG_LOG_LN(status);
+}
+
 /* UART Gateway Proxy Handlers */
 void onRegReq(pkt_device_info_t devInfo)
 {
@@ -107,13 +114,6 @@ void onRegReq(pkt_device_info_t devInfo)
 void onPktDigioutEvents(pkt_digiout_events_t event)
 {
     MsgPacketizer::send(Serial, PKT_DIGIOUT_EVENTS, event);
-}
-
-void onPktGatewayStatus(pkt_gateway_status_t status)
-{
-    gatewayStatus = status;
-    DEBUG_LOG("ESPNOW Gateway Status Recived: ");
-    DEBUG_LOG_LN(status);
 }
 
 void onPktUartGatewayStatus(pkt_gateway_status_t status)
@@ -143,11 +143,11 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
     MsgPacketizer::subscribe(
         Serial,
         PKT_GATEWAY_DATA_PIPE,
-        [&](pkt_gateway_data_pipe_t pipe)
+        [&](MsgPack::str_t mac, pkt_encoded_data_t data)
         {
-            u8_t mac[6];
-            str2mac(pipe.mac.c_str(), mac);
-            esp_now_send(mac, pipe.payload.data(), pipe.payload.size());
+            u8_t macAddr[6];
+            str2mac(mac.c_str(), macAddr);
+            esp_now_send(macAddr, data.data(), data.size());
         });
 
     /* GateWay Spacific Only */
@@ -155,9 +155,9 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
     MsgPacketizer::subscribe_manual(PKT_REGISTER_DEVICE, &onRegReq);
     MsgPacketizer::subscribe_manual(
         PKT_GATEWAY_DATA_PIPE,
-        [&](pkt_gateway_data_pipe_t pipe)
+        [&](pkt_encoded_data_t data)
         {
-            Serial.write(pipe.payload.data(), pipe.payload.size());
+            Serial.write(data.data(), data.size());
         });
 
     esp_now_send(mac, (u8_t *)packet.data.data(), packet.data.size());
