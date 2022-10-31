@@ -12,6 +12,11 @@
 #define IR_2 0x1FED827
 #define IR_3 0x1FEF807
 #define IR_4 0x1FE30CF
+#define IR_5 0x1FEB04F
+#define IR_6 0x1FE708F
+#define IR_7 0x1FE00FF
+#define IR_8 0x1FEF00F
+#define IR_9 0x1FE9867
 
 extern decode_results ir_result;
 extern IRrecv irrecv;

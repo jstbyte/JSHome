@@ -29,6 +29,7 @@ void handleMqtt()
                 mqttClient.subscribe(topicDigiOut.c_str());
                 DEBUG_LOG_LN("Subscribed!");
                 wifiRetryTimeStamp = 0; // Give A Change To Retry When Disconnect;
+                digiOut.start();
                 return;
             }
         }

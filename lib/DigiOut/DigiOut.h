@@ -29,6 +29,7 @@ public:
     void writes(uint8_t state);
     void writes(String states); // Args Eg. [1,0,1,0]
     uint8_t read(uint8_t idx);
+    uint8_t read(); // Return Combined Result > 0 | 1 | >3 :Pins Are Not Synced;
     String reads(); // Return Eg. [1,0,1,0]
 };
 

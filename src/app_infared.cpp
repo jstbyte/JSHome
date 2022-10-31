@@ -15,9 +15,19 @@ void handleInfared()
         switch (ir_result.value)
         {
         case IR_POWER:
+            if (digiOut.read() == HIGH)
+            {
+                notify = false;
+                break;
+            }
             digiOut.writes(HIGH);
             break;
-        case IR_EQ:
+        case IR_MUTE:
+            if (digiOut.read() == LOW)
+            {
+                notify = false;
+                break;
+            }
             digiOut.writes(LOW);
             break;
         case IR_MODE:

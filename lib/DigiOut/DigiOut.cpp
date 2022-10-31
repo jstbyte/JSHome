@@ -172,6 +172,20 @@ uint8_t DigiOut::read(uint8_t idx)
     return 255;
 }
 
+uint8_t DigiOut::read()
+{
+    uint8_t result = digitalRead(pins[0]);
+    for (uint8_t i = 1; i < pinCount; i++)
+    {
+        if (digitalRead(pins[i]) != result)
+        {
+            return 3;
+        }
+    }
+
+    return result;
+}
+
 String DigiOut::reads()
 {
 
