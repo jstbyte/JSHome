@@ -126,14 +126,15 @@ void setupMqtt(String path)
     mqttClient = new PubSubClient;
     if (config.mqttPORT == 8883)
     {
-        DEBUG_LOG_LN("Secure Mqtt Mode");
         wifiClient = new BearSSL::WiFiClientSecure;
         auto caCert = new BearSSL::X509List(mqtt_cert);
         ((WiFiClientSecure *)wifiClient)->setTrustAnchors(caCert);
+        DEBUG_LOG_LN("Mqtt Mode Secure");
     }
     else
     {
         wifiClient = new WiFiClient;
+        DEBUG_LOG_LN("Mqtt Mode Insecure");
     }
 
     mqttClient->setClient(*wifiClient);
