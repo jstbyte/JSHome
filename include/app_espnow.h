@@ -44,7 +44,7 @@ typedef struct
 {
     u8_t index;
     u8_t state;
-    bool trigger;
+    u8_t trigger;
     MSGPACK_DEFINE(index, state, trigger);
 } pkt_digiout_write_t;
 

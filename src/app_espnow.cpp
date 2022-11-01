@@ -65,10 +65,15 @@ void regReq()
 void onPktDigioutWrite(pkt_digiout_write_t data)
 {
     digiOut.write(data.index, data.state);
-    if (data.trigger)
+    if (data.trigger > 1)
+    {
+        digiOut.start(true);
+    }
+    else if (data.trigger)
     {
         digiOut.start();
     }
+
     DEBUG_LOG("ESPNOW DigiOut Write :: INDEX: ")
     DEBUG_LOG(data.index)
     DEBUG_LOG(" STATE:")
@@ -178,7 +183,7 @@ void setupEspNow(String path)
     MsgPacketizer::subscribe_manual(PKT_DIGIOUT_WRITE, &onPktDigioutWrite);
     MsgPacketizer::subscribe_manual(PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
     MsgPacketizer::subscribe_manual(PKT_GATEWAY_STATUS, &onPktGatewayStatus);
-    DEBUG_LOG_LN("ESPNOW Setup Complate")
+    DEBUG_LOG("ESPNOW Setup Complate\n\n")
 
 #ifndef SERIAL_DEBUG_LOG
     MsgPacketizer::subscribe(Serial, PKT_GATEWAY_STATUS, &onPktUartGatewayStatus);

@@ -33,7 +33,7 @@ void recoverReboot() /* Retrive & Set States From RTC Memory */
             digiOut.write(i, rtcData->pinStates[i]);
         }
         DEBUG_LOG("\nRTC Memory Found : ")
-        DEBUG_LOG_LN(digiOut.reads())
+        DEBUG_LOG(digiOut.reads())
     }
     else
     {
@@ -52,7 +52,7 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
-    DEBUG_LOG("WiFi Retry Timeout : ")
+    DEBUG_LOG("\nWiFi Retry Timeout : ")
     DEBUG_LOG_LN(wifiRetryTimeout)
     DEBUG_LOG("Device Mac Address : ");
     DEBUG_LOG_LN(WiFi.macAddress());

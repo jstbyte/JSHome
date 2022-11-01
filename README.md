@@ -1,8 +1,11 @@
 # Instruction!
-> Environment: ESP_RCTRL > Required Data & Conf. Files Below;
+> API: Environment: ESP_RCTRL > Required Data & Conf. Files Below;
 ```js
-/* ( CA Cert Embaded Into Program Memory in app_mqtt.h ) */
+/* ( CA Cert Embaded Into Program Memory in app_mqtt.h 'maybe change in future' ) */
+const topicDigiOutSubscribe = "{SECRAT}/req/digiout/{id}"; // Data eg. `index:state`;
+const topicDigiOutPublish = "{SECRAT}/res/digiout/{id}"; // Data eg. Ordered `[states]`;
 
+/* Pin No. 13 Used By IR Reciver Sensor */
 /* data/config/digio_pins.json */ [5, 4, 14, 12]
 /* data/config/digio_stat.json */ [1, 1, 1, 1]   
 

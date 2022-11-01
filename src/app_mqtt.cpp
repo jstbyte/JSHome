@@ -3,8 +3,7 @@
 
 unsigned long long wifiRetryTimeStamp = 0;
 
-String topicDigiOut = "{SECRAT}/req/digiout/+";
-String regexDigiOut = "^{SECRAT}\\/req\\/digiout\\/([1-8])$";
+String topicDigiOut = "{SECRAT}/req/digiout/{id}";
 
 WiFiClient *wifiClient;
 PubSubClient *mqttClient;
@@ -54,25 +53,29 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     data[length] = '\0';
     strncpy(data, (char *)payload, length);
 
-    std::regex pattern(regexDigiOut.c_str());
-    std::string searchable(topic);
-    std::smatch matches;
-
     DEBUG_LOG("MQTT Topic Recived : ");
     DEBUG_LOG_LN(topic);
+    DEBUG_LOG("Payload:: ")
+    DEBUG_LOG_LN(data);
 
-    if (std::regex_search(searchable, matches, pattern))
+    if (topicDigiOut == topic)
     {
-        u8_t pinIndex = String(matches[1].str().c_str()).toInt() - 1;
-        String action = String(data);
-        if (action.isEmpty())
-        {
-            digiOut.start(true);
-            return;
-        }
+        unsigned short index = 404;
+        unsigned short state = 404;
+        sscanf(data, "%hu:%hu", &index, &state);
 
-        digiOut.write(pinIndex, action.toInt());
-        digiOut.start();
+        if (index != 404 && index < digiOut.count())
+        {
+            if (state == 404)
+            {
+                digiOut.start(true);
+            }
+            else if (state != digiOut.read(index))
+            {
+                digiOut.write(index, state);
+                digiOut.start();
+            }
+        }
     }
 }
 
@@ -80,7 +83,6 @@ void emmittMqttEvent()
 {
     String topic = String(topicDigiOut.c_str());
     topic.replace("/req/", "/res/");
-    topic.replace("/+", "");
     mqttClient->publish(topic.c_str(), digiOut.reads().c_str());
     DEBUG_LOG_LN("MQTT Event Emitted");
 }
@@ -112,7 +114,7 @@ void setupMqtt(String path)
     auto config = loadWlanConfig(path);
 
     topicDigiOut.replace("{SECRAT}", config.identity);
-    regexDigiOut.replace("{SECRAT}", config.identity);
+    topicDigiOut.replace("{id}", String(ESP.getChipId()));
 
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
@@ -129,16 +131,16 @@ void setupMqtt(String path)
         wifiClient = new BearSSL::WiFiClientSecure;
         auto caCert = new BearSSL::X509List(mqtt_cert);
         ((WiFiClientSecure *)wifiClient)->setTrustAnchors(caCert);
-        DEBUG_LOG_LN("Mqtt Mode Secure");
+        DEBUG_LOG("Secure:: ");
     }
     else
     {
         wifiClient = new WiFiClient;
-        DEBUG_LOG_LN("Mqtt Mode Insecure");
+        DEBUG_LOG("Insecure:: ");
     }
 
     mqttClient->setClient(*wifiClient);
     mqttClient->setServer(mqttHost, config.mqttPORT);
     mqttClient->setCallback(mqttCallback);
-    DEBUG_LOG_LN("WIFI & MQTT Setup Complate")
+    DEBUG_LOG("WIFI & MQTT Setup Complate\n\n")
 }

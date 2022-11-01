@@ -4,7 +4,6 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <time.h>
-#include <regex>
 
 typedef struct
 {
