@@ -15,40 +15,40 @@ void handleInfared()
         switch (ir_result.value)
         {
         case IR_EQ:
-            if (wifiRetryTimeout == 0 && WIFI_RETRY_TIMEOUT > 1)
+            if (Global::wifiRetryTimeout == 0 && WIFI_RETRY_TIMEOUT > 1)
                 reBoot(WIFI_RETRY_TIMEOUT);
             notify = false;
             break;
         case IR_POWER:
-            if (digiOut.read() == HIGH)
+            if (Global::digiOut.read() == HIGH)
             {
                 notify = false;
                 break;
             }
-            digiOut.writes(HIGH);
+            Global::digiOut.writes(HIGH);
             break;
         case IR_MUTE:
-            if (digiOut.read() == LOW)
+            if (Global::digiOut.read() == LOW)
             {
                 notify = false;
                 break;
             }
-            digiOut.writes(LOW);
+            Global::digiOut.writes(LOW);
             break;
         case IR_MODE:
-            digiOut.writes();
+            Global::digiOut.writes();
             break;
         case IR_1:
-            digiOut.write(0);
+            Global::digiOut.write(0);
             break;
         case IR_2:
-            digiOut.write(1);
+            Global::digiOut.write(1);
             break;
         case IR_3:
-            digiOut.write(2);
+            Global::digiOut.write(2);
             break;
         case IR_4:
-            digiOut.write(3);
+            Global::digiOut.write(3);
             break;
         default:
             notify = false;
@@ -58,7 +58,7 @@ void handleInfared()
         // Notify Mqtt;
         if (notify)
         {
-            digiOut.start();
+            Global::digiOut.start();
         }
     }
 }

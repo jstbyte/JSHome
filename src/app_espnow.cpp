@@ -36,7 +36,7 @@ void emmittEspNowEvent()
     {
         pkt_digiout_events_t digiOutEvent;
         digiOutEvent.id = ESP.getChipId();
-        digiOutEvent.data = digiOut.reads();
+        digiOutEvent.data = Global::digiOut.reads();
         const auto &packet = MsgPacketizer::encode(PKT_DIGIOUT_EVENTS, digiOutEvent);
         esp_now_send(gatewayMac, (u8_t *)packet.data.data(), (u8_t)packet.data.size());
         DEBUG_LOG_LN("ESPNOW DigiOut Event Emitted!")
@@ -46,7 +46,7 @@ void emmittEspNowEvent()
     {
         pkt_digiout_events_t digiOutEvent;
         digiOutEvent.id = ESP.getChipId();
-        digiOutEvent.data = digiOut.reads();
+        digiOutEvent.data = Global::digiOut.reads();
         MsgPacketizer::send(Serial, PKT_DIGIOUT_EVENTS, digiOutEvent);
         return;
     }
@@ -64,28 +64,19 @@ void regReq()
 
 void onPktDigioutWrite(pkt_digiout_write_t data)
 {
-    digiOut.write(data.index, data.state);
-    if (data.trigger > 1)
-    {
-        digiOut.start(true);
-    }
-    else if (data.trigger)
-    {
-        digiOut.start();
-    }
-
-    DEBUG_LOG("ESPNOW DigiOut Write :: INDEX: ")
+    DEBUG_LOG("DigiOut Write :: INDEX: ")
     DEBUG_LOG(data.index)
     DEBUG_LOG(" STATE:")
     DEBUG_LOG_LN(data.state)
+    Global::digiOut.writer(data.index, data.state);
 }
 
 void onPktDigioutWrites(pkt_digiout_writes_t data)
 {
-    digiOut.writes(data.states);
+    Global::digiOut.writes(data.states);
     if (data.trigger)
     {
-        digiOut.start();
+        Global::digiOut.start();
     }
 
     DEBUG_LOG("ESPNOW DigiOut Writes :")

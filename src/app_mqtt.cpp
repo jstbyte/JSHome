@@ -1,16 +1,14 @@
 #include <app_common.h>
 #include "app_mqtt.h"
 
-unsigned long long wifiRetryTimeStamp = 0;
-
-String topicDigiOut = "{SECRAT}/req/digiout/{id}";
-
+String topicDigiOut;
 WiFiClient *wifiClient;
 PubSubClient *mqttClient;
+unsigned long long wifiRetryTimeStamp = 0;
 
 void handleMqtt()
 {
-    if (wifiRetryTimeout)
+    if (Global::wifiRetryTimeout)
     {
 
         if (mqttClient->loop())
@@ -26,22 +24,22 @@ void handleMqtt()
                 mqttClient->subscribe(topicDigiOut.c_str());
                 DEBUG_LOG_LN("Subscribed!");
                 wifiRetryTimeStamp = 0; // Give A Change To Retry When Disconnect;
-                digiOut.start();
+                Global::digiOut.start();
                 return;
             }
         }
 
-        if (wifiRetryTimeout != 1)
+        if (Global::wifiRetryTimeout != 1)
         {
             if (wifiRetryTimeStamp == 0) // If TimeStamp Not Availble Then -
             {
                 wifiRetryTimeStamp = millis(); // Take A TimeStamp for Timeout;
             }
-            else if ((u32_t)(millis() - wifiRetryTimeStamp) > wifiRetryTimeout)
+            else if ((u32_t)(millis() - wifiRetryTimeStamp) > Global::wifiRetryTimeout)
             {
                 reBoot(0);
             }
-            DEBUG_LOG(wifiRetryTimeout - (u32_t)(millis() - wifiRetryTimeStamp));
+            DEBUG_LOG(Global::wifiRetryTimeout - (u32_t)(millis() - wifiRetryTimeStamp));
             DEBUG_LOG_LN("ms Remaining, MQTT Connecting...");
         }
     }
@@ -60,22 +58,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
     if (topicDigiOut == topic)
     {
-        unsigned short index = 404;
-        unsigned short state = 404;
+        unsigned short index = 255;
+        unsigned short state = 255;
         sscanf(data, "%hu:%hu", &index, &state);
-
-        if (index != 404 && index < digiOut.count())
-        {
-            if (state == 404)
-            {
-                digiOut.start(true);
-            }
-            else if (state != digiOut.read(index))
-            {
-                digiOut.write(index, state);
-                digiOut.start();
-            }
-        }
+        Global::digiOut.writer(index, state);
     }
 }
 
@@ -83,7 +69,7 @@ void emmittMqttEvent()
 {
     String topic = String(topicDigiOut.c_str());
     topic.replace("/req/", "/res/");
-    mqttClient->publish(topic.c_str(), digiOut.reads().c_str());
+    mqttClient->publish(topic.c_str(), Global::digiOut.reads().c_str());
     DEBUG_LOG_LN("MQTT Event Emitted");
 }
 
@@ -113,9 +99,6 @@ void setupMqtt(String path)
 {
     auto config = loadWlanConfig(path);
 
-    topicDigiOut.replace("{SECRAT}", config.identity);
-    topicDigiOut.replace("{id}", String(ESP.getChipId()));
-
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.begin(config.wlanSSID, config.wlanPASS);
@@ -140,7 +123,8 @@ void setupMqtt(String path)
     }
 
     mqttClient->setClient(*wifiClient);
-    mqttClient->setServer(mqttHost, config.mqttPORT);
     mqttClient->setCallback(mqttCallback);
+    mqttClient->setServer(mqttHost, config.mqttPORT);
+    topicDigiOut = config.identity + "/req/digiout/" + String(ESP.getChipId());
     DEBUG_LOG("WIFI & MQTT Setup Complate\n\n")
 }

@@ -9,7 +9,7 @@
 
 class DigiOut /* 255 RETURN VALUE = ERROR */
 {
-private:
+protected:
     uint8_t pinCount;
     uint8_t pins[MAX_DIO_PIN_COUNT];
 
@@ -35,4 +35,12 @@ public:
 
 class DebounceDigiOut : public Debouncer, public DigiOut
 {
+public:
+    /*
+    state:::::::::::::::::::::::::::::::::
+        <128 = standard;
+        +128 = Silent Mode, standard + 128;
+         255 = Emmit Event Without Writing;
+    */
+    void writer(uint8_t index, uint8_t state);
 };

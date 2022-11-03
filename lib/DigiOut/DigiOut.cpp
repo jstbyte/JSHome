@@ -202,3 +202,29 @@ String DigiOut::reads()
 
     return String("[]");
 }
+
+/* DebounceDigiOut Functions */
+void DebounceDigiOut::writer(uint8_t index, uint8_t state)
+{
+    if (state == 255)
+    { /* Event Fire Only */
+        start(true);
+        return;
+    }
+
+    if (index < pinCount)
+    {
+        if (state < 128)
+        {
+            if (digitalRead(pins[index]) != state)
+            {
+                write(index, state);
+                start();
+            }
+            return;
+        }
+
+        state -= 128;
+        write(index, state);
+    }
+}

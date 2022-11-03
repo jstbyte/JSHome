@@ -15,10 +15,6 @@ typedef struct
     u32_t mqttPORT;
 } wlan_config_t;
 
-extern WiFiClient *wifiClient;
-extern PubSubClient *mqttClient;
-extern u32_t wifiRetryTimeout;
-
 void handleMqtt();
 void emmittMqttEvent();
 void setupMqtt(String path);
