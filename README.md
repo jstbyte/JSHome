@@ -2,6 +2,7 @@
 > API: Environment: ESP_RCTRL > Required Data & Conf. Files Below;
 ```js
 /* ( CA Cert Embaded Into Program Memory in app_mqtt.h 'maybe change in future' ) */
+const topicDevInfo = "{SECRAT}/req/devinfo"; // No Data Required;
 const topicDigiOutSubscribe = "{SECRAT}/req/digiout/{id}"; // Data eg. `index:state`;
 const topicDigiOutPublish = "{SECRAT}/res/digiout/{id}"; // Data eg. Ordered `[states]`;
 

@@ -1,6 +1,7 @@
 #include <app_common.h>
 #include "app_mqtt.h"
 
+String topicDevInfo;
 String topicDigiOut;
 WiFiClient *wifiClient;
 PubSubClient *mqttClient;
@@ -22,6 +23,7 @@ void handleMqtt()
             if (mqttClient->connect(uuid("ESP8266JST-").c_str()))
             {
                 mqttClient->subscribe(topicDigiOut.c_str());
+                mqttClient->subscribe(topicDevInfo.c_str());
                 DEBUG_LOG_LN("Subscribed!");
                 wifiRetryTimeStamp = 0; // Give A Change To Retry When Disconnect;
                 Global::digiOut.start();
@@ -62,6 +64,21 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         unsigned short state = 255;
         sscanf(data, "%hu:%hu", &index, &state);
         Global::digiOut.writer(index, state);
+        return;
+    }
+
+    if (topicDevInfo == topic)
+    {
+        String devInfoJsonDoc;
+        StaticJsonDocument<128> doc;
+        doc["id"] = ESP.getChipId();
+        doc["mac"] = WiFi.macAddress();
+        doc["digiout"] = Global::digiOut.count();
+        serializeJson(doc, devInfoJsonDoc);
+        String topic = String(topicDevInfo.c_str());
+        topic.replace("/req/", "/res/");
+        mqttClient->publish(topic.c_str(), devInfoJsonDoc.c_str());
+        return;
     }
 }
 
@@ -125,6 +142,7 @@ void setupMqtt(String path)
     mqttClient->setClient(*wifiClient);
     mqttClient->setCallback(mqttCallback);
     mqttClient->setServer(mqttHost, config.mqttPORT);
+    topicDevInfo = config.identity + "/req/devinfo";
     topicDigiOut = config.identity + "/req/digiout/" + String(ESP.getChipId());
     DEBUG_LOG("WIFI & MQTT Setup Complate\n\n")
 }

@@ -3,6 +3,7 @@
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include <time.h>
 
 typedef struct
