@@ -73,9 +73,9 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         StaticJsonDocument<128> doc;
         doc["id"] = ESP.getChipId();
         doc["mac"] = WiFi.macAddress();
-        doc["digiout"] = Global::digiOut.count();
+        doc["digioutCount"] = Global::digiOut.count();
         serializeJson(doc, devInfoJsonDoc);
-        String topic = String(topicDevInfo.c_str());
+        String topic = String(topicDevInfo.c_str()) + "/" + ESP.getChipId();
         topic.replace("/req/", "/res/");
         mqttClient->publish(topic.c_str(), devInfoJsonDoc.c_str());
         return;
