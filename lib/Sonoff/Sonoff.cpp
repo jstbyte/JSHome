@@ -1,22 +1,22 @@
-#include "DigiOut.h"
+#include "Sonoff.h"
 
-DigiOut::DigiOut() : pinCount(0){};
-DigiOut::DigiOut(uint8_t pins[], uint8_t pinCount)
+Sonoff::Sonoff() : pinCount(0){};
+Sonoff::Sonoff(uint8_t pins[], uint8_t pinCount)
 {
     this->load(pins, pinCount);
 };
 
-uint8_t DigiOut::count()
+uint8_t Sonoff::count()
 {
     return pinCount;
 }
 
-uint8_t *DigiOut::getPins()
+uint8_t *Sonoff::getPins()
 {
     return pins;
 }
 
-uint8_t DigiOut::getPinByIndex(uint8_t idx)
+uint8_t Sonoff::getPinByIndex(uint8_t idx)
 {
     if (idx < pinCount)
     {
@@ -26,7 +26,7 @@ uint8_t DigiOut::getPinByIndex(uint8_t idx)
     return 255;
 }
 
-uint8_t DigiOut::getIndexByPin(uint8_t pin)
+uint8_t Sonoff::getIndexByPin(uint8_t pin)
 {
     /* Return 255 If Not Found */
     for (uint8_t i = 0; i < pinCount; i++)
@@ -39,9 +39,9 @@ uint8_t DigiOut::getIndexByPin(uint8_t pin)
     return 255;
 }
 
-bool DigiOut::add(uint8_t pin) /* Add A Pin */
+bool Sonoff::add(uint8_t pin) /* Add A Pin */
 {
-    if (pinCount < MAX_DIO_PIN_COUNT)
+    if (pinCount < MAX_SONOFF_PIN_COUNT)
     {
         pinMode(pin, OUTPUT);
         pins[pinCount] = pin;
@@ -52,7 +52,7 @@ bool DigiOut::add(uint8_t pin) /* Add A Pin */
     return false;
 }
 
-void DigiOut::load(uint8_t *pns, uint8_t pCount)
+void Sonoff::load(uint8_t *pns, uint8_t pCount)
 {
     memcpy(this->pins, pns, pCount);
     pinCount = pCount;
@@ -62,7 +62,7 @@ void DigiOut::load(uint8_t *pns, uint8_t pCount)
     }
 }
 
-uint8_t DigiOut::load(String path, bool states) /* Returns Loaded Pins Count */
+uint8_t Sonoff::load(String path, bool states) /* Returns Loaded Pins Count */
 {
     File file = LittleFS.open(path, "r");
     StaticJsonDocument<128> jdoc;
@@ -89,7 +89,7 @@ uint8_t DigiOut::load(String path, bool states) /* Returns Loaded Pins Count */
         pinCount = 0; /* Load DigiOut Pins */
         for (JsonVariant v : jdoc.as<JsonArray>())
         {
-            if (pinCount < MAX_DIO_PIN_COUNT)
+            if (pinCount < MAX_SONOFF_PIN_COUNT)
             {
                 pins[pinCount] = v.as<u8>();
                 pinMode(pins[pinCount], OUTPUT);
@@ -104,7 +104,7 @@ uint8_t DigiOut::load(String path, bool states) /* Returns Loaded Pins Count */
     return pinCount;
 }
 
-void DigiOut::write(uint8_t idx, uint8_t state) /* 0 | 1 | >1 */
+void Sonoff::write(uint8_t idx, uint8_t state) /* 0 | 1 | >1 */
 {
     if (idx < pinCount)
     {
@@ -119,7 +119,7 @@ void DigiOut::write(uint8_t idx, uint8_t state) /* 0 | 1 | >1 */
     }
 }
 
-void DigiOut::write(uint8_t idx)
+void Sonoff::write(uint8_t idx)
 {
     if (idx < pinCount)
     {
@@ -127,7 +127,7 @@ void DigiOut::write(uint8_t idx)
     }
 }
 
-void DigiOut::writes(uint8_t state)
+void Sonoff::writes(uint8_t state)
 {
     for (uint8_t i = 0; i < pinCount; i++)
     {
@@ -135,7 +135,7 @@ void DigiOut::writes(uint8_t state)
     }
 }
 
-void DigiOut::writes()
+void Sonoff::writes()
 {
     for (uint8_t i = 0; i < pinCount; i++)
     {
@@ -143,7 +143,15 @@ void DigiOut::writes()
     }
 }
 
-void DigiOut::writes(String states)
+void Sonoff::write_(uint8_t *states)
+{
+    for (uint8_t i = 0; i < pinCount; i++)
+    {
+        digitalWrite(pins[i], states[i]);
+    }
+}
+
+void Sonoff::writes(String states)
 {
     StaticJsonDocument<128> jdoc;
     if (deserializeJson(jdoc, states) == DeserializationError::Ok)
@@ -151,7 +159,7 @@ void DigiOut::writes(String states)
         uint8_t idx = 0;
         for (JsonVariant v : jdoc.as<JsonArray>())
         {
-            if (idx < MAX_DIO_PIN_COUNT)
+            if (idx < MAX_SONOFF_PIN_COUNT)
             {
                 digitalWrite(pins[idx], v.as<u8>());
                 idx++;
@@ -162,7 +170,7 @@ void DigiOut::writes(String states)
     }
 }
 
-uint8_t DigiOut::read(uint8_t idx)
+uint8_t Sonoff::read(uint8_t idx)
 {
     if (idx < pinCount)
     {
@@ -172,7 +180,7 @@ uint8_t DigiOut::read(uint8_t idx)
     return 255;
 }
 
-uint8_t DigiOut::read()
+uint8_t Sonoff::read()
 {
     uint8_t result = digitalRead(pins[0]);
     for (uint8_t i = 1; i < pinCount; i++)
@@ -186,7 +194,15 @@ uint8_t DigiOut::read()
     return result;
 }
 
-String DigiOut::reads()
+void Sonoff::reads(uint8_t *states)
+{
+    for (uint8_t i = 0; i < pinCount; i++)
+    {
+        states[i] = digitalRead(pins[i]);
+    }
+}
+
+String Sonoff::reads()
 {
 
     if (pinCount)
@@ -203,8 +219,8 @@ String DigiOut::reads()
     return String("[]");
 }
 
-/* DebounceDigiOut Functions */
-void DebounceDigiOut::writer(uint8_t index, uint8_t state)
+/* Sonoffe Functions */
+void Sonoffe::writer(uint8_t index, uint8_t state)
 {
     if (state == 255)
     { /* Event Fire Only */

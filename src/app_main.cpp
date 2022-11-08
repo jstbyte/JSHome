@@ -5,7 +5,7 @@
 #include "app_mqtt.h"
 
 u8_t Global::bootCount = 0;
-DebounceDigiOut Global::digiOut;
+Sonoffe Global::digiOut;
 u32_t Global::wifiRetryTimeout = WIFI_RETRY_TIMEOUT;
 
 void reBoot(u32_t retryTimeout) /* Set States to RTCMemory & Restart */
@@ -16,10 +16,7 @@ void reBoot(u32_t retryTimeout) /* Set States to RTCMemory & Restart */
     auto *rtcData = rtcMemory.getData();
     rtcData->bootCount = ++Global::bootCount;
     rtcData->wifiRetryTimeout = retryTimeout;
-    for (u8_t i = 0; i < Global::digiOut.count(); i++)
-    { // Save Current Pin States;
-        rtcData->pinStates[i] = Global::digiOut.read(i);
-    }
+    Global::digiOut.write_(rtcData->pinStates);
     DEBUG_LOG_LN("Rebooting...")
     rtcMemory.save();
     ESP.restart();
@@ -33,10 +30,7 @@ void recoverReboot() /* Retrive & Set States From RTC Memory */
         RTCState *rtcData = rtcMemory.getData();
         Global::wifiRetryTimeout = rtcData->wifiRetryTimeout;
         Global::bootCount = rtcData->bootCount;
-        for (u8 i = 0; i < Global::digiOut.count(); i++)
-        { // Recover Pin States;
-            Global::digiOut.write(i, rtcData->pinStates[i]);
-        }
+        Global::digiOut.reads(rtcData->pinStates);
         DEBUG_LOG("\nRTC Memory Found : ")
         DEBUG_LOG(Global::digiOut.reads())
     }

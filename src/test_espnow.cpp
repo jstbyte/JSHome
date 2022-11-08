@@ -42,7 +42,6 @@ void onRegReq_(pkt_device_info_t devInfo)
 
     pkt_digiout_writes_t dData;
     dData.states = digiOut.reads();
-    dData.trigger = true;
     const auto &packet1 = MsgPacketizer::encode(PKT_DIGIOUT_WRITES, dData);
     esp_now_send(mac, (u8_t *)packet1.data.data(), packet1.data.size());
 
@@ -51,7 +50,6 @@ void onRegReq_(pkt_device_info_t devInfo)
     pkt_digiout_write_t data;
     data.index = 0;
     data.state = 1;
-    data.trigger = true;
 
     const auto &packet2 = MsgPacketizer::encode(PKT_DIGIOUT_WRITE, data);
     esp_now_send(mac, (u8_t *)packet2.data.data(), packet2.data.size());

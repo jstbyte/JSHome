@@ -4,21 +4,21 @@
 #define SPIFFS LittleFS
 #include <RTCMemory.h>
 #include "Debouncer.h"
-#include "DigiOut.h"
 #include "Helper.h"
+#include "Sonoff.h"
 
 #define WIFI_RETRY_TIMEOUT 30000 /* WiFi Only: 1 */
 
 typedef struct
 {
     u8_t bootCount;
-    bool pinStates[7];
+    u8_t pinStates[7];
     u32_t wifiRetryTimeout; // 0 = ESPNOW_MODE;
 } RTCState;
 
 namespace Global
 {
-    extern DebounceDigiOut digiOut;
+    extern Sonoffe digiOut;
     extern u32_t wifiRetryTimeout;
     extern u8_t bootCount;
 }

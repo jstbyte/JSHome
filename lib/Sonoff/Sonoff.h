@@ -3,19 +3,19 @@
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 #include "Debouncer.h"
-#ifndef MAX_DIO_PIN_COUNT
-#define MAX_DIO_PIN_COUNT 8
+#ifndef MAX_SONOFF_PIN_COUNT
+#define MAX_SONOFF_PIN_COUNT 8
 #endif
 
-class DigiOut /* 255 RETURN VALUE = ERROR */
+class Sonoff /* 255 RETURN VALUE = ERROR */
 {
 protected:
     uint8_t pinCount;
-    uint8_t pins[MAX_DIO_PIN_COUNT];
+    uint8_t pins[MAX_SONOFF_PIN_COUNT];
 
 public:
-    DigiOut();
-    DigiOut(uint8_t pins[], uint8_t pinCount);
+    Sonoff();
+    Sonoff(uint8_t pins[], uint8_t pinCount);
     uint8_t count();
     uint8_t *getPins();
     uint8_t getPinByIndex(uint8_t idx);
@@ -27,13 +27,15 @@ public:
     void write(uint8_t idx);
     void writes();
     void writes(uint8_t state);
-    void writes(String states); // Args Eg. [1,0,1,0]
+    void write_(uint8_t *states); // Args Eg. [1,0,1,0]
+    void writes(String states);   // Args Eg. [1,0,1,0]
     uint8_t read(uint8_t idx);
-    uint8_t read(); // Return Combined Result > 0 | 1 | >3 :Pins Are Not Synced;
-    String reads(); // Return Eg. [1,0,1,0]
+    uint8_t read();              // Return Combined Result > 0 | 1 | >3 :Pins Are Not Synced;
+    void reads(uint8_t *states); // Args Eg. [1,0,1,0]
+    String reads();              // Return Eg. [1,0,1,0]
 };
 
-class DebounceDigiOut : public Debouncer, public DigiOut
+class Sonoffe : public Debouncer, public Sonoff
 {
 public:
     /*
