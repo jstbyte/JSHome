@@ -43,8 +43,8 @@ void recoverReboot() /* Retrive & Set States From RTC Memory */
 void setup()
 {
     LittleFS.begin();
-    Serial.begin(9600);
     irrecv.enableIRIn();
+    Serial.begin(115200);
     Global::digiOut.load("/config/digio_pins.json");
     recoverReboot();
 
