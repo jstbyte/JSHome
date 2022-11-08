@@ -66,6 +66,7 @@ void PSClient::begin(wlan_config_t *config)
     }
 
     timestamp = 0;
+    wifiTimeout = 0;
     setClient(*wifiClient);
     setServer(mqttHost, config->mqttPORT);
     DEBUG_LOG("WIFI & MQTT Setup Complate\n\n")
@@ -93,12 +94,13 @@ wlan_config_t PSClient::loadWlanConfig(String path)
     return config;
 }
 
-void PSClient::onTimeout(std::function<void(void)> cb)
-{
-    _onTimeout = cb;
-}
-
 void PSClient::onConnection(std::function<void(PSClient *)> cb)
 {
     _onConnection = cb;
+}
+
+void PSClient::onTimeout(std::function<void(void)> cb, u32_t time)
+{
+    wifiTimeout = time;
+    _onTimeout = cb;
 }

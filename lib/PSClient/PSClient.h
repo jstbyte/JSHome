@@ -60,6 +60,6 @@ public:
     wlan_config_t begin(String path);
     void begin(wlan_config_t *config);
     wlan_config_t loadWlanConfig(String path);
-    void onTimeout(std::function<void(void)> cb);
     void onConnection(std::function<void(PSClient *)> cb);
+    void onTimeout(std::function<void(void)> cb, u32_t time);
 };
