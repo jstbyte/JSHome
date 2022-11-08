@@ -6,8 +6,26 @@
 #include "Debouncer.h"
 #include "Helper.h"
 #include "Sonoff.h"
+#include "spac.h"
 
 #define WIFI_RETRY_TIMEOUT 30000 /* WiFi Only: 1 */
+
+typedef struct
+{
+    u8_t channel;
+    u32_t timeout;
+    String gateway;
+} espnow_config_t;
+
+typedef struct
+{
+    String identity;
+    String wlanSSID;
+    String wlanPASS;
+    String hostNAME;
+    String mqttHOST;
+    u32_t mqttPORT;
+} wlan_config_t;
 
 typedef struct
 {

@@ -1,8 +1,8 @@
-#ifdef ESP_RCTRL
-#include "app_common.h"
-#include "app_infared.h"
-#include "app_espnow.h"
-#include "app_mqtt.h"
+#ifdef rSONOFF
+#include "rSonoff/infared.cpp.h"
+#include "rSonoff/espnow.cpp.h"
+#include "rSonoff/mqtt.cpp.h"
+#include "rSonoff/shared.h"
 
 u8_t Global::bootCount = 0;
 Sonoffe Global::digiOut;

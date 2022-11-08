@@ -1,5 +1,8 @@
-#include <app_common.h>
-#include "app_infared.h"
+#include <IRutils.h>
+#include <IRrecv.h>
+#include "shared.h"
+
+#define IR_RECV_PIN 13 /* Can Be Change */
 
 decode_results ir_result;
 IRrecv irrecv(IR_RECV_PIN);

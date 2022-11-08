@@ -1,5 +1,6 @@
-#include <app_common.h>
-#include "app_espnow.h"
+#include <ESP8266WiFi.h>
+#include <espnow.h>
+#include "shared.h"
 
 u8_t gatewayStatus = 0;
 uint8_t gatewayMac[6];

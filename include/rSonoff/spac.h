@@ -1,9 +1,19 @@
 #pragma once
-#include <espnow.h>
-#include <ESP8266WiFi.h>
 #include <MsgPacketizer.h>
 
-extern uint8_t espnow_gateway_mac_addr[6];
+#define IR_POWER 0x1FE48B7
+#define IR_MODE 0x1FE58A7
+#define IR_MUTE 0x1FE7887
+#define IR_EQ 0x1FE20DF
+#define IR_1 0x1FE50AF
+#define IR_2 0x1FED827
+#define IR_3 0x1FEF807
+#define IR_4 0x1FE30CF
+#define IR_5 0x1FEB04F
+#define IR_6 0x1FE708F
+#define IR_7 0x1FE00FF
+#define IR_8 0x1FEF00F
+#define IR_9 0x1FE9867
 
 enum GATEWAY_STATUS
 {
@@ -60,14 +70,3 @@ typedef struct
     MsgPack::str_t data;
     MSGPACK_DEFINE(id, data);
 } pkt_digiout_events_t;
-
-typedef struct
-{
-    u8_t channel;
-    u32_t timeout;
-    String gateway;
-} espnow_config_t;
-
-void emmittEspNowEvent();
-void setupEspNow(String path);
-espnow_config_t loadEspnowConfig(String path);

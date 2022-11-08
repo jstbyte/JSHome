@@ -1,9 +1,11 @@
-#ifdef ESP_RCTRL_TEST
+#ifdef rSONOFF_TEST
+#include <rSonoff/spac.h>
+#include <ESP8266WiFi.h>
 #include <Helper.h>
-#include <DigiOut.h>
-#include <app_espnow.h>
+#include <Sonoff.h>
+#include <espnow.h>
 
-DigiOut digiOut;
+Sonoff digiOut;
 u8_t slaveMac[6];
 
 void espnowCallback(u8_t *mac, u8_t *payload, u8_t len)
@@ -50,7 +52,6 @@ void onRegReq_(pkt_device_info_t devInfo)
     pkt_digiout_write_t data;
     data.index = 0;
     data.state = 1;
-
     const auto &packet2 = MsgPacketizer::encode(PKT_DIGIOUT_WRITE, data);
     esp_now_send(mac, (u8_t *)packet2.data.data(), packet2.data.size());
 }
