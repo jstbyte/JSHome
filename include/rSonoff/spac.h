@@ -28,9 +28,9 @@ enum PACKET_INDEX_TYPES
 {
     PKT_NIL,             // Not Sure!;
     PKT_WIFI_TIMEOUT,    // pkt_wifi_timeout_t
-    PKT_DIGIOUT_WRITE,   // pkt_digiout_write_t
-    PKT_DIGIOUT_WRITES,  // pkt_digiout_writes_t
-    PKT_DIGIOUT_EVENTS,  // pkt_digiout_events_t
+    PKT_SONOFF_WRITE,    // pkt_sonoff_write_t
+    PKT_SONOFF_WRITES,   // pkt_sonoff_writes_t
+    PKT_SONOFF_EVENTS,   // pkt_sonoff_events_t
     PKT_GATEWAY_STATUS,  // pkt_gateway_status_t
     PKT_REGISTER_DEVICE, // pkt_device_info_t
     /* Extra Packets */
@@ -55,18 +55,18 @@ typedef struct
     u8_t index;
     u8_t state;
     MSGPACK_DEFINE(index, state);
-} pkt_digiout_write_t;
+} pkt_sonoff_write_t;
 
 typedef struct
 {
     bool trigger;
     MsgPack::str_t states;
     MSGPACK_DEFINE(states, trigger);
-} pkt_digiout_writes_t;
+} pkt_sonoff_writes_t;
 
 typedef struct
 {
     pkt_device_id_t id;
     MsgPack::str_t data;
     MSGPACK_DEFINE(id, data);
-} pkt_digiout_events_t;
+} pkt_sonoff_events_t;

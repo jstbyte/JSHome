@@ -23,35 +23,35 @@ void handleInfared()
             notify = false;
             break;
         case IR_POWER:
-            if (Global::digiOut.read() == HIGH)
+            if (Global::sonoff.read() == HIGH)
             {
                 notify = false;
                 break;
             }
-            Global::digiOut.writes(HIGH);
+            Global::sonoff.writes(HIGH);
             break;
         case IR_MUTE:
-            if (Global::digiOut.read() == LOW)
+            if (Global::sonoff.read() == LOW)
             {
                 notify = false;
                 break;
             }
-            Global::digiOut.writes(LOW);
+            Global::sonoff.writes(LOW);
             break;
         case IR_MODE:
-            Global::digiOut.writes();
+            Global::sonoff.writes();
             break;
         case IR_1:
-            Global::digiOut.write(0);
+            Global::sonoff.write(0);
             break;
         case IR_2:
-            Global::digiOut.write(1);
+            Global::sonoff.write(1);
             break;
         case IR_3:
-            Global::digiOut.write(2);
+            Global::sonoff.write(2);
             break;
         case IR_4:
-            Global::digiOut.write(3);
+            Global::sonoff.write(3);
             break;
         default:
             notify = false;
@@ -61,7 +61,7 @@ void handleInfared()
         // Notify Mqtt;
         if (notify)
         {
-            Global::digiOut.start();
+            Global::sonoff.start();
         }
     }
 }

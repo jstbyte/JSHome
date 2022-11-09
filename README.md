@@ -1,17 +1,17 @@
-# Instruction!
-> API: Environment: ESP_RCTRL > Required Data & Conf. Files Below;
+# Instruction for env( SONOFF )!
+> API: Environment: SONOFF > Required Data & Conf. Files Below;
 ```ts
-type DevInfo = { id: string; mac: string; digioutCount: number };
+type DevInfo = { dev: string; uid: string; mac: string;  pin: number };
 
 /* ( CA Cert Embaded Into Program Memory in app_mqtt.h 'maybe change in future' ) */
 const topicDevInfoSubscribe = "{SECRAT}/req/devinfo"; // No Data Required;
 const topicDevInfoPublish = "{SECRAT}/req/devinfo/{id}"; // Data: DevInfo;
-const topicDigiOutSubscribe = "{SECRAT}/req/digiout/{id}"; // Data eg. `index:state`;
-const topicDigiOutPublish = "{SECRAT}/res/digiout/{id}"; // Data eg. Ordered `[states]`;
+const topicSonoffSubscribe = "{SECRAT}/req/sonoff/{id}"; // Data eg. `index:state`;
+const topicSonoffPublish = "{SECRAT}/res/sonoff/{id}"; // Data eg. Ordered `[states]`;
 
 /* Pin No. 13 Used By IR Reciver Sensor */
-/* data/config/digio_pins.json */ [5, 4, 14, 12]
-/* data/config/digio_stat.json */ [1, 1, 1, 1]   
+/* data/config/sonoff_pins.json */ [5, 4, 14, 12]
+/* data/config/sonoff_stat.json */ [1, 1, 1, 1]   
 
 /* data/config/espn_conf.json  */ {
   "channel": 6,

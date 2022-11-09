@@ -7,8 +7,8 @@
 #include <PubSubWiFi.h>
 #include <time.h>
 
+String topicSonoff;
 String topicDevInfo;
-String topicDigiOut;
 PubSubWiFi *mqttClient;
 
 void onMqttTimeout()
@@ -20,7 +20,7 @@ void onMqttConnection(PubSubWiFi *client)
 {
     if (client->connected())
     {
-        client->subscribe(topicDigiOut.c_str());
+        client->subscribe(topicSonoff.c_str());
         client->subscribe(topicDevInfo.c_str());
         DEBUG_LOG_LN("MQTT: subscribed.");
         return;
@@ -38,12 +38,12 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     DEBUG_LOG(" payload:: ")
     DEBUG_LOG_LN(data);
 
-    if (topicDigiOut == topic)
+    if (topicSonoff == topic)
     {
         unsigned short index = 255;
         unsigned short state = 255;
         sscanf(data, "%hu:%hu", &index, &state);
-        Global::digiOut.writer(index, state);
+        Global::sonoff.writer(index, state);
         return;
     }
 
@@ -51,9 +51,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     {
         String devInfoJsonDoc;
         StaticJsonDocument<128> doc;
-        doc["id"] = ESP.getChipId();
+        doc["dev"] = "sonoff";
+        doc["uid"] = ESP.getChipId();
         doc["mac"] = WiFi.macAddress();
-        doc["digioutCount"] = Global::digiOut.count();
+        doc["pin"] = Global::sonoff.count();
         serializeJson(doc, devInfoJsonDoc);
         String topic = String(topicDevInfo.c_str()) + "/" + ESP.getChipId();
         topic.replace("/req/", "/res/");
@@ -64,9 +65,9 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
 void emmittMqttEvent()
 {
-    String topic = String(topicDigiOut.c_str());
+    String topic = String(topicSonoff.c_str());
     topic.replace("/req/", "/res/");
-    mqttClient->publish(topic.c_str(), Global::digiOut.reads().c_str());
+    mqttClient->publish(topic.c_str(), Global::sonoff.reads().c_str());
     DEBUG_LOG_LN("MQTT: event emitted.");
 }
 
@@ -77,6 +78,6 @@ void setupMqtt(String path)
     mqttClient->onConnection(onMqttConnection);
     mqttClient->onTimeout(onMqttTimeout, Global::wifiRetryTimeout);
     topicDevInfo = config.identity + "/req/devinfo";
-    topicDigiOut = config.identity + "/req/digiout/" + String(ESP.getChipId());
+    topicSonoff = config.identity + "/req/sonoff/" + String(ESP.getChipId());
     DEBUG_LOG_LN("MQTT: Topic Ready.");
 }

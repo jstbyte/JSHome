@@ -26,7 +26,7 @@ typedef struct
 
 namespace Global
 {
-    extern Sonoffe digiOut;
+    extern Sonoffe sonoff;
     extern u32_t wifiRetryTimeout;
     extern u8_t bootCount;
 }

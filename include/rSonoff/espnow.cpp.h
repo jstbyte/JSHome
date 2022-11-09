@@ -19,7 +19,7 @@ espnow_config_t loadEspnowConfig(String path)
         configFile.close();
         return config;
     }
-    DEBUG_LOG_LN("ESPNOW Config DeserializationError");
+    DEBUG_LOG_LN("ESPNOW: Config error!");
 
     reBoot(1);
     return config;
@@ -35,59 +35,62 @@ void emmittEspNowEvent()
 {
     if (gatewayStatus == GATEWAY_STATUS_STD_CONNECTED)
     {
-        pkt_digiout_events_t digiOutEvent;
-        digiOutEvent.id = ESP.getChipId();
-        digiOutEvent.data = Global::digiOut.reads();
-        const auto &packet = MsgPacketizer::encode(PKT_DIGIOUT_EVENTS, digiOutEvent);
+        pkt_sonoff_events_t sonoffEvent;
+        sonoffEvent.id = ESP.getChipId();
+        sonoffEvent.data = Global::sonoff.reads();
+        const auto &packet = MsgPacketizer::encode(PKT_SONOFF_EVENTS, sonoffEvent);
         esp_now_send(gatewayMac, (u8_t *)packet.data.data(), (u8_t)packet.data.size());
-        DEBUG_LOG_LN("ESPNOW DigiOut Event Emitted!")
+        DEBUG_LOG_LN("ESPNOW: Sonoff event emitted.")
     }
 
     if (gatewayStatus == GATEWAY_STATUS_UART_CONNECTED)
     {
-        pkt_digiout_events_t digiOutEvent;
-        digiOutEvent.id = ESP.getChipId();
-        digiOutEvent.data = Global::digiOut.reads();
-        MsgPacketizer::send(Serial, PKT_DIGIOUT_EVENTS, digiOutEvent);
+        pkt_sonoff_events_t sonoffEvent;
+        sonoffEvent.id = ESP.getChipId();
+        sonoffEvent.data = Global::sonoff.reads();
+        MsgPacketizer::send(Serial, PKT_SONOFF_EVENTS, sonoffEvent);
         return;
     }
 }
 
 void regReq()
 {
+    if (Global::bootCount > 0)
+        return;
+
     pkt_device_info_t devInfo;
     devInfo.id = ESP.getChipId();
     devInfo.mac = WiFi.macAddress();
     const auto &packet = MsgPacketizer::encode(PKT_REGISTER_DEVICE, devInfo);
     esp_now_send(gatewayMac, (u8_t *)packet.data.data(), packet.data.size());
-    DEBUG_LOG_LN("ESPNOW Send's Device Reg. Req.");
+    DEBUG_LOG_LN("ESPNOW: Device reg. req. sent.");
 }
 
-void onPktDigioutWrite(pkt_digiout_write_t data)
+void onPktSonoffWrite(pkt_sonoff_write_t data)
 {
-    DEBUG_LOG("DigiOut Write :: INDEX: ")
+    DEBUG_LOG("Sonoff write :: INDEX: ")
     DEBUG_LOG(data.index)
     DEBUG_LOG(" STATE:")
     DEBUG_LOG_LN(data.state)
-    Global::digiOut.writer(data.index, data.state);
+    Global::sonoff.writer(data.index, data.state);
 }
 
-void onPktDigioutWrites(pkt_digiout_writes_t data)
+void onPktSonoffWrites(pkt_sonoff_writes_t data)
 {
-    Global::digiOut.writes(data.states);
+    Global::sonoff.writes(data.states);
     if (data.trigger)
     {
-        Global::digiOut.start();
+        Global::sonoff.start();
     }
 
-    DEBUG_LOG("ESPNOW DigiOut Writes :")
+    DEBUG_LOG("Sonoff writes :")
     DEBUG_LOG_LN(data.states)
 }
 
 void onPktGatewayStatus(pkt_gateway_status_t status)
 {
     gatewayStatus = status;
-    DEBUG_LOG("ESPNOW Gateway Status Recived: ");
+    DEBUG_LOG("ESPNOW: Gateway status recived: ");
     DEBUG_LOG_LN(status);
 }
 
@@ -108,9 +111,9 @@ void onRegReq(pkt_device_info_t devInfo)
     esp_now_send(mac, (u8_t *)packet.data.data(), packet.data.size());
 }
 
-void onPktDigioutEvents(pkt_digiout_events_t event)
+void onPktSonoffEvents(pkt_sonoff_events_t event)
 {
-    MsgPacketizer::send(Serial, PKT_DIGIOUT_EVENTS, event);
+    MsgPacketizer::send(Serial, PKT_SONOFF_EVENTS, event);
 }
 
 void onPktUartGatewayStatus(pkt_gateway_status_t status)
@@ -133,9 +136,9 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
     gatewayStatus = status;
 
     MsgPacketizer::subscribe(Serial, PKT_WIFI_TIMEOUT, &reBoot);
-    MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITE, &onPktDigioutWrite);
-    MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
-    MsgPacketizer::subscribe(Serial, PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
+    MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITE, &onPktSonoffWrite);
+    MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITES, &onPktSonoffWrites);
+    MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITES, &onPktSonoffWrites);
 
     MsgPacketizer::subscribe(
         Serial,
@@ -148,7 +151,7 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
         });
 
     /* GateWay Spacific Only */
-    MsgPacketizer::subscribe_manual(PKT_DIGIOUT_EVENTS, &onPktDigioutEvents);
+    MsgPacketizer::subscribe_manual(PKT_SONOFF_EVENTS, &onPktSonoffEvents);
     MsgPacketizer::subscribe_manual(PKT_REGISTER_DEVICE, &onRegReq);
     MsgPacketizer::subscribe_manual(
         PKT_GATEWAY_DATA_PIPE,
@@ -172,18 +175,13 @@ void setupEspNow(String path)
     esp_now_register_recv_cb(espnowRecvCallback);
     /* Subscribe To Espnow Packets */
     MsgPacketizer::subscribe_manual(PKT_WIFI_TIMEOUT, &reBoot);
-    MsgPacketizer::subscribe_manual(PKT_DIGIOUT_WRITE, &onPktDigioutWrite);
-    MsgPacketizer::subscribe_manual(PKT_DIGIOUT_WRITES, &onPktDigioutWrites);
+    MsgPacketizer::subscribe_manual(PKT_SONOFF_WRITE, &onPktSonoffWrite);
+    MsgPacketizer::subscribe_manual(PKT_SONOFF_WRITES, &onPktSonoffWrites);
     MsgPacketizer::subscribe_manual(PKT_GATEWAY_STATUS, &onPktGatewayStatus);
-    DEBUG_LOG("ESPNOW Setup Complate\n\n")
+    DEBUG_LOG_LN("ESPNOW: Initialized.")
+    regReq(); /* Send Gateway Registration Request. */
 
 #ifndef SERIAL_DEBUG_LOG
     MsgPacketizer::subscribe(Serial, PKT_GATEWAY_STATUS, &onPktUartGatewayStatus);
-    if (rtcMemory.getData()->bootCount == 0)
-    {
-        regReq();
-    }
-#else
-    regReq();
 #endif
 }
