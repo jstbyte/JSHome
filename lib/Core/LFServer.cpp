@@ -37,7 +37,7 @@ void handleSvg(AsyncWebServer *server)
 {
 }
 
-void handleFsFile(AsyncWebServerRequest *req, String path, String contentType, bool gzip = true)
+void handleFsFile(AsyncWebServerRequest *req, String path, String contentType, bool gzip)
 {
     if (LittleFS.exists(path))
     {
