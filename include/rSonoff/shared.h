@@ -4,7 +4,7 @@
 #define SPIFFS LittleFS
 #include <RTCMemory.h>
 #include "Debouncer.h"
-#include "Helper.h"
+#include "helper.h"
 #include "Sonoff.h"
 #include "spac.h"
 
