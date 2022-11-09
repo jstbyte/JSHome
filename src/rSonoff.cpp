@@ -1,8 +1,8 @@
 #ifdef rSONOFF
-#include "rSonoff/infared.cpp.h"
-#include "rSonoff/espnow.cpp.h"
-#include "rSonoff/mqtt.cpp.h"
 #include "rSonoff/shared.h"
+#include "rSonoff/espnow.cpp.h"
+#include "rSonoff/infared.cpp.h"
+#include "rSonoff/mqtt.cpp.h"
 
 u8_t Global::bootCount = 0;
 Sonoffe Global::digiOut;
@@ -58,11 +58,13 @@ void setup()
 
     if (Global::wifiRetryTimeout)
     {
+        mqttClient = new PubSubWiFi;
         Global::digiOut.setCallback(emmittMqttEvent, 500);
         setupMqtt("/config/wlan_conf.json");
     }
     else
     {
+        mqttClient = nullptr;
         setupEspNow("/config/espn_conf.json");
         Global::digiOut.setCallback(emmittEspNowEvent, 500);
     }
@@ -70,11 +72,14 @@ void setup()
 
 void loop()
 {
+    if (mqttClient)
+    {
+        mqttClient->eventLoop();
+    }
+    Global::digiOut.loop();
     MsgPacketizer::parse();
     handleInfared();
-    Global::digiOut.loop();
-    handleMqtt();
-    delay(100);
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    delay(100);
 }
 #endif

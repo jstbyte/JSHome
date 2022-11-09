@@ -19,16 +19,6 @@ typedef struct
 
 typedef struct
 {
-    String identity;
-    String wlanSSID;
-    String wlanPASS;
-    String hostNAME;
-    String mqttHOST;
-    u32_t mqttPORT;
-} wlan_config_t;
-
-typedef struct
-{
     u8_t bootCount;
     u8_t pinStates[7];
     u32_t wifiRetryTimeout; // 0 = ESPNOW_MODE;

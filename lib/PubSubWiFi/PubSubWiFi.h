@@ -46,20 +46,21 @@ typedef struct
     u32_t mqttPORT;
 } wlan_config_t;
 
-class PSClient : public PubSubClient
+class PubSubWiFi : public PubSubClient
 {
-private:
-    u32_t wifiTimeout;
-    WiFiClient *wifiClient;
-    unsigned long long timestamp;
+protected:
+    u32_t _connTimeout;
+    WiFiClient *_wifiClient;
+    unsigned long long _timestamp;
     std::function<void(void)> _onTimeout;
-    std::function<void(PSClient *)> _onConnection;
+    std::function<void(PubSubWiFi *)> _onConnection;
 
 public:
     void eventLoop();
-    wlan_config_t begin(String path);
-    void begin(wlan_config_t *config);
+    void resetTimeout(u32_t time);
+    wlan_config_t init(String path);
+    void init(wlan_config_t *config);
     wlan_config_t loadWlanConfig(String path);
-    void onConnection(std::function<void(PSClient *)> cb);
+    void onConnection(std::function<void(PubSubWiFi *)> cb);
     void onTimeout(std::function<void(void)> cb, u32_t time);
 };
