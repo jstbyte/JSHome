@@ -5,7 +5,7 @@
 #include <Sonoff.h>
 #include <espnow.h>
 
-Sonoff digiOut;
+Sonoff sonoff;
 u8_t slaveMac[6];
 
 void espnowCallback(u8_t *mac, u8_t *payload, u8_t len)
@@ -14,9 +14,9 @@ void espnowCallback(u8_t *mac, u8_t *payload, u8_t len)
     MsgPacketizer::feed(payload, len);
 }
 
-void onDigiOutEvent_(pkt_digiout_events_t event)
+void onSonoffEvent_(pkt_sonoff_events_t event)
 {
-    DEBUG_LOG("DigiOut Event (");
+    DEBUG_LOG("Sonoff Event (");
     DEBUG_LOG(event.id);
     DEBUG_LOG(") ");
     DEBUG_LOG_LN(event.data);
@@ -42,17 +42,17 @@ void onRegReq_(pkt_device_info_t devInfo)
 
     delay(100);
 
-    pkt_digiout_writes_t dData;
-    dData.states = digiOut.reads();
-    const auto &packet1 = MsgPacketizer::encode(PKT_DIGIOUT_WRITES, dData);
+    pkt_sonoff_writes_t dData;
+    dData.states = sonoff.reads();
+    const auto &packet1 = MsgPacketizer::encode(PKT_SONOFF_WRITES, dData);
     esp_now_send(mac, (u8_t *)packet1.data.data(), packet1.data.size());
 
     delay(100);
 
-    pkt_digiout_write_t data;
+    pkt_sonoff_write_t data;
     data.index = 0;
     data.state = 1;
-    const auto &packet2 = MsgPacketizer::encode(PKT_DIGIOUT_WRITE, data);
+    const auto &packet2 = MsgPacketizer::encode(PKT_SONOFF_WRITE, data);
     esp_now_send(mac, (u8_t *)packet2.data.data(), packet2.data.size());
 }
 
@@ -68,14 +68,14 @@ void setup()
         // MsgPacketizer::subscribe_manual(PKT_WIFI_BOOT, &booEventRecived);
 
         MsgPacketizer::subscribe_manual(PKT_REGISTER_DEVICE, &onRegReq_);
-        MsgPacketizer::subscribe_manual(PKT_DIGIOUT_EVENTS, &onDigiOutEvent_);
+        MsgPacketizer::subscribe_manual(PKT_SONOFF_EVENTS, &onSonoffEvent_);
         // MsgPacketizer::subscribe_manual(PKT_, &on_pkt_gateway_link_test);
         DEBUG_LOG_LN("ESPNOW Setup Complate!");
     }
     u8_t pins[4] = {5, 4, 14, 12};
 
-    digiOut.load(pins, 4);
-    digiOut.write(3, HIGH);
+    sonoff.load(pins, 4);
+    sonoff.write(3, HIGH);
 }
 
 void loop(){};
