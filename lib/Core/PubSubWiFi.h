@@ -44,6 +44,7 @@ typedef struct
     String hostNAME;
     String mqttHOST;
     u32_t mqttPORT;
+    u32_t mChannel;
 } wlan_config_t;
 
 class PubSubWiFi : public PubSubClient
@@ -60,7 +61,7 @@ public:
     void resetTimeout(u32_t time);
     wlan_config_t init(String path);
     void init(wlan_config_t *config);
-    wlan_config_t loadWlanConfig(String path);
+    static wlan_config_t loadWlanConfig(String path);
     void onConnection(std::function<void(PubSubWiFi *)> cb);
     void onTimeout(std::function<void(void)> cb, u32_t time);
 };
