@@ -1,4 +1,4 @@
-# Instruction for env( SONOFF )!
+# Instructions!
 > API: Environment: SONOFF > Required Data & Conf. Files Below;
 ```ts
 type DevInfo = { dev: string; uid: string; mac: string;  pin: number };
