@@ -8,10 +8,10 @@ type DevInfo = {
 };
 
 /* ( CA Cert Embaded Into Program Memory in app_mqtt.h 'maybe change in future' ) */
-const topicDevInfoSubscribe = "{SECRAT}/{id}/req/devinfo"; // No Data Required;
-const topicDevInfoPublish = "{SECRAT}/{id}/req/devinfo"; // Data: DevInfo;
-const topicSonoffSubscribe = "{SECRAT}/{id}/req/sonoff"; // Data eg. `index:state`;
-const topicSonoffPublish = "{SECRAT}/{id}/res/sonoff"; // Data eg. Ordered `[states]`;
+const topicDevInfoSubscribe = "{SECRAT}/req/devinfo"; // No Data Required;
+const topicDevInfoPublish = "{SECRAT}/req/devinfo/{id}"; // Data: DevInfo;
+const topicSonoffSubscribe = "{SECRAT}/req/sonoff/{id}"; // Data eg. `index:state`;
+const topicSonoffPublish = "{SECRAT}/res/sonoff/{id}"; // Data eg. Ordered `[states]`;
 
 /* Pin No. 13 Used By IR Reciver Sensor */
 /* data/config/sonoff_pins.json */ [5, 4, 14, 12]
