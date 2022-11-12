@@ -44,7 +44,6 @@ typedef struct
     String hostNAME;
     String mqttHOST;
     u32_t mqttPORT;
-    u32_t mChannel;
 } wlan_config_t;
 
 class PubSubWiFi : public PubSubClient

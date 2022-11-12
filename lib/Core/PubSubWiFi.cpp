@@ -107,7 +107,6 @@ wlan_config_t PubSubWiFi::loadWlanConfig(String path)
     config.hostNAME = wConfigDoc["hostNAME"].as<String>();
     config.mqttHOST = wConfigDoc["mqttHOST"].as<String>();
     config.mqttPORT = wConfigDoc["mqttPORT"].as<u32_t>();
-    config.mChannel = wConfigDoc["mChannel"].as<u32_t>();
     DEBUG_LOG_LN("MQTT: & WiFi config loaded.");
     configFile.close();
     return config;
