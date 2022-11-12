@@ -48,11 +48,14 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     if (topicDevInfo == topic)
     {
         String devInfoJsonDoc;
-        StaticJsonDocument<128> doc;
-        doc["dev"] = "sonoff";
+        StaticJsonDocument<256> doc;
         doc["uid"] = ESP.getChipId();
         doc["mac"] = WiFi.macAddress();
-        doc["pin"] = Sonoffe::count();
+
+        JsonObject services = doc["services"].createNestedObject();
+        services["name"] = "sonoff";
+        services["data"] = Sonoffe::count();
+
         serializeJson(doc, devInfoJsonDoc);
         String topic = String(topicDevInfo.c_str()) + "/" + ESP.getChipId();
         topic.replace("/req/", "/res/");
