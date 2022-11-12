@@ -8,6 +8,11 @@ void Debouncer::setCallback(void (*_callback)(void), u32 _timeout)
     asap = false;
 }
 
+void Debouncer::setTimeout(u32 time)
+{
+    timeout = time;
+}
+
 void Debouncer::loop()
 {
     if (enabled && (asap || (millis() - timestamp) > timeout))
