@@ -1,37 +1,34 @@
 #include "Sonoff.h"
 
-Sonoff::Sonoff() : pinCount(0){};
-Sonoff::Sonoff(uint8_t pins[], uint8_t pinCount)
-{
-    this->load(pins, pinCount);
-};
+uint8_t Sonoff::_count = 0;
+uint8_t Sonoff::_pins[MAX_SONOFF_PIN_COUNT];
 
 uint8_t Sonoff::count()
 {
-    return pinCount;
+    return Sonoff::_count;
 }
 
-uint8_t *Sonoff::getPins()
+uint8_t *Sonoff::pins()
 {
-    return pins;
+    return Sonoff::_pins;
 }
 
-uint8_t Sonoff::getPinByIndex(uint8_t idx)
+uint8_t Sonoff::pin(uint8_t idx)
 {
-    if (idx < pinCount)
+    if (idx < Sonoff::_count)
     {
-        return pins[idx];
+        return Sonoff::_pins[idx];
     }
 
     return 255;
 }
 
-uint8_t Sonoff::getIndexByPin(uint8_t pin)
+uint8_t Sonoff::indexOf(uint8_t pin)
 {
     /* Return 255 If Not Found */
-    for (uint8_t i = 0; i < pinCount; i++)
+    for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        if (pins[i] == pin)
+        if (Sonoff::_pins[i] == pin)
         {
             return i;
         }
@@ -41,24 +38,24 @@ uint8_t Sonoff::getIndexByPin(uint8_t pin)
 
 bool Sonoff::add(uint8_t pin) /* Add A Pin */
 {
-    if (pinCount < MAX_SONOFF_PIN_COUNT)
+    if (Sonoff::_count < MAX_SONOFF_PIN_COUNT)
     {
         pinMode(pin, OUTPUT);
-        pins[pinCount] = pin;
-        pinCount++;
+        Sonoff::_pins[Sonoff::_count] = pin;
+        Sonoff::_count++;
         return true;
     }
 
     return false;
 }
 
-void Sonoff::load(uint8_t *pns, uint8_t pCount)
+void Sonoff::load(uint8_t *pins, uint8_t count)
 {
-    memcpy(this->pins, pns, pCount);
-    pinCount = pCount;
-    for (uint8_t i = 0; i < pinCount; i++)
+    memcpy(Sonoff::_pins, pins, count);
+    Sonoff::_count = count;
+    for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        pinMode(pins[i], OUTPUT);
+        pinMode(Sonoff::_pins[i], OUTPUT);
     }
 }
 
@@ -69,14 +66,14 @@ uint8_t Sonoff::load(String path, bool states) /* Returns Loaded Pins Count */
 
     if (deserializeJson(jdoc, file) == DeserializationError::Ok)
     {
-        if (states) /* Load DigiOut Pins Default State */
+        if (states) /* Load DigiOut Pins Default State [...numbers] */
         {
             uint8_t index = 0;
             for (JsonVariant v : jdoc.as<JsonArray>())
             {
-                if (index <= pinCount)
+                if (index <= Sonoff::_count)
                 {
-                    digitalWrite(pins[index], v.as<u8>());
+                    digitalWrite(Sonoff::_pins[index], v.as<u8>());
                     index++;
                     continue;
                 }
@@ -86,14 +83,14 @@ uint8_t Sonoff::load(String path, bool states) /* Returns Loaded Pins Count */
             return index;
         }
 
-        pinCount = 0; /* Load DigiOut Pins */
+        Sonoff::_count = 0; /* Load DigiOut Pins [...numbers] */
         for (JsonVariant v : jdoc.as<JsonArray>())
         {
-            if (pinCount < MAX_SONOFF_PIN_COUNT)
+            if (Sonoff::_count < MAX_SONOFF_PIN_COUNT)
             {
-                pins[pinCount] = v.as<u8>();
-                pinMode(pins[pinCount], OUTPUT);
-                pinCount++;
+                Sonoff::_pins[Sonoff::_count] = v.as<u8>();
+                pinMode(Sonoff::_pins[Sonoff::_count], OUTPUT);
+                Sonoff::_count++;
                 continue;
             }
             break;
@@ -101,53 +98,53 @@ uint8_t Sonoff::load(String path, bool states) /* Returns Loaded Pins Count */
     }
 
     file.close();
-    return pinCount;
+    return Sonoff::_count;
 }
 
-void Sonoff::write(uint8_t idx, uint8_t state) /* 0 | 1 | >1 */
+void Sonoff::write(uint8_t index, uint8_t state) /* 0 | 1 | >1 */
 {
-    if (idx < pinCount)
+    if (index < Sonoff::_count)
     {
         if (state > 1)
         {
-            digitalWrite(pins[idx], !digitalRead(pins[idx]));
+            digitalWrite(Sonoff::_pins[index], !digitalRead(Sonoff::_pins[index]));
         }
         else
         {
-            digitalWrite(pins[idx], state);
+            digitalWrite(Sonoff::_pins[index], state);
         }
     }
 }
 
-void Sonoff::write(uint8_t idx)
+void Sonoff::write(uint8_t index)
 {
-    if (idx < pinCount)
+    if (index < Sonoff::_count)
     {
-        digitalWrite(pins[idx], !digitalRead(pins[idx]));
+        digitalWrite(Sonoff::_pins[index], !digitalRead(Sonoff::_pins[index]));
     }
 }
 
 void Sonoff::writes(uint8_t state)
 {
-    for (uint8_t i = 0; i < pinCount; i++)
+    for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        digitalWrite(pins[i], state);
+        digitalWrite(Sonoff::_pins[i], state);
     }
 }
 
 void Sonoff::writes()
 {
-    for (uint8_t i = 0; i < pinCount; i++)
+    for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        digitalWrite(pins[i], !digitalRead(pins[i]));
+        digitalWrite(Sonoff::_pins[i], !digitalRead(Sonoff::_pins[i]));
     }
 }
 
 void Sonoff::write_(uint8_t *states)
 {
-    for (uint8_t i = 0; i < pinCount; i++)
+    for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        digitalWrite(pins[i], states[i]);
+        digitalWrite(Sonoff::_pins[i], states[i]);
     }
 }
 
@@ -159,9 +156,9 @@ void Sonoff::writes(String states)
         uint8_t idx = 0;
         for (JsonVariant v : jdoc.as<JsonArray>())
         {
-            if (idx < MAX_SONOFF_PIN_COUNT)
+            if (idx < Sonoff::_count)
             {
-                digitalWrite(pins[idx], v.as<u8>());
+                digitalWrite(Sonoff::_pins[idx], v.as<u8>());
                 idx++;
                 continue;
             }
@@ -170,11 +167,11 @@ void Sonoff::writes(String states)
     }
 }
 
-uint8_t Sonoff::read(uint8_t idx)
+uint8_t Sonoff::read(uint8_t index)
 {
-    if (idx < pinCount)
+    if (index < Sonoff::_count)
     {
-        return digitalRead(pins[idx]);
+        return digitalRead(Sonoff::_pins[index]);
     }
 
     return 255;
@@ -182,10 +179,10 @@ uint8_t Sonoff::read(uint8_t idx)
 
 uint8_t Sonoff::read()
 {
-    uint8_t result = digitalRead(pins[0]);
-    for (uint8_t i = 1; i < pinCount; i++)
+    uint8_t result = digitalRead(_pins[0]);
+    for (uint8_t i = 1; i < Sonoff::_count; i++)
     {
-        if (digitalRead(pins[i]) != result)
+        if (digitalRead(Sonoff::_pins[i]) != result)
         {
             return 3;
         }
@@ -196,21 +193,21 @@ uint8_t Sonoff::read()
 
 void Sonoff::reads(uint8_t *states)
 {
-    for (uint8_t i = 0; i < pinCount; i++)
+    for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        states[i] = digitalRead(pins[i]);
+        states[i] = digitalRead(Sonoff::_pins[i]);
     }
 }
 
 String Sonoff::reads()
 {
 
-    if (pinCount)
+    if (Sonoff::_count)
     {
         String res = "[";
-        for (uint8_t i = 0; i < pinCount; i++)
+        for (uint8_t i = 0; i < Sonoff::_count; i++)
         {
-            res += String(digitalRead(pins[i]) ? 1 : 0) + ",";
+            res += String(digitalRead(Sonoff::_pins[i]) ? 1 : 0) + ",";
         }
         res[res.length() - 1] = ']';
         return res;
@@ -219,28 +216,30 @@ String Sonoff::reads()
     return String("[]");
 }
 
-/* Sonoffe Functions */
+/* Sonoffe Implementation */
+Debouncer Sonoffe::event;
+
 void Sonoffe::writer(uint8_t index, uint8_t state)
 {
     if (state == 255)
     { /* Event Fire Only */
-        start(true);
+        Sonoffe::event.start(true);
         return;
     }
 
-    if (index < pinCount)
+    if (index < Sonoff::_count)
     {
         if (state < 128)
         {
-            if (digitalRead(pins[index]) != state)
+            if (digitalRead(Sonoff::_pins[index]) != state)
             {
-                write(index, state);
-                start();
+                Sonoff::write(index, state);
+                Sonoffe::event.start();
             }
             return;
         }
 
         state -= 128;
-        write(index, state);
+        Sonoff::write(index, state);
     }
 }

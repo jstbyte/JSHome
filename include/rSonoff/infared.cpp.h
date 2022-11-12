@@ -1,6 +1,6 @@
+#include "shared.h"
 #include <IRutils.h>
 #include <IRrecv.h>
-#include "shared.h"
 
 #define IR_RECV_PIN 13 /* Can Be Change */
 
@@ -18,40 +18,40 @@ void handleInfared()
         switch (ir_result.value)
         {
         case IR_EQ:
-            if (Global::wifiRetryTimeout == 0 && WIFI_RETRY_TIMEOUT > 1)
-                reBoot(WIFI_RETRY_TIMEOUT);
+            if (ConnMan::data()->timeout == 0 && WIFI_RETRY_TIMEOUT > 1)
+                ConnMan::reboot(WIFI_RETRY_TIMEOUT, Sonoffe::pins(), Sonoffe::count());
             notify = false;
             break;
         case IR_POWER:
-            if (Global::sonoff.read() == HIGH)
+            if (Sonoffe::read() == HIGH)
             {
                 notify = false;
                 break;
             }
-            Global::sonoff.writes(HIGH);
+            Sonoffe::writes(HIGH);
             break;
         case IR_MUTE:
-            if (Global::sonoff.read() == LOW)
+            if (Sonoffe::read() == LOW)
             {
                 notify = false;
                 break;
             }
-            Global::sonoff.writes(LOW);
+            Sonoffe::writes(LOW);
             break;
         case IR_MODE:
-            Global::sonoff.writes();
+            Sonoffe::writes();
             break;
         case IR_1:
-            Global::sonoff.write(0);
+            Sonoffe::write(0);
             break;
         case IR_2:
-            Global::sonoff.write(1);
+            Sonoffe::write(1);
             break;
         case IR_3:
-            Global::sonoff.write(2);
+            Sonoffe::write(2);
             break;
         case IR_4:
-            Global::sonoff.write(3);
+            Sonoffe::write(3);
             break;
         default:
             notify = false;
@@ -61,7 +61,7 @@ void handleInfared()
         // Notify Mqtt;
         if (notify)
         {
-            Global::sonoff.start();
+            Sonoffe::event.start();
         }
     }
 }

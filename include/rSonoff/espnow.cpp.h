@@ -1,6 +1,12 @@
-#include <ESP8266WiFi.h>
-#include <espnow.h>
 #include "shared.h"
+#include <espnow.h>
+
+typedef struct
+{
+    u8_t channel;
+    u32_t timeout;
+    String gateway;
+} espnow_config_t;
 
 u8_t gatewayStatus = 0;
 uint8_t gatewayMac[6];
@@ -21,7 +27,7 @@ espnow_config_t loadEspnowConfig(String path)
     }
     DEBUG_LOG_LN("ESPNOW: Config error!");
 
-    reBoot(1);
+    ConnMan::reboot(1);
     return config;
 }
 
@@ -37,7 +43,7 @@ void emmittEspNowEvent()
     {
         pkt_sonoff_events_t sonoffEvent;
         sonoffEvent.id = ESP.getChipId();
-        sonoffEvent.data = Global::sonoff.reads();
+        sonoffEvent.data = Sonoffe::reads();
         const auto &packet = MsgPacketizer::encode(PKT_SONOFF_EVENTS, sonoffEvent);
         esp_now_send(gatewayMac, (u8_t *)packet.data.data(), (u8_t)packet.data.size());
         DEBUG_LOG_LN("ESPNOW: Sonoff event emitted.")
@@ -47,7 +53,7 @@ void emmittEspNowEvent()
     {
         pkt_sonoff_events_t sonoffEvent;
         sonoffEvent.id = ESP.getChipId();
-        sonoffEvent.data = Global::sonoff.reads();
+        sonoffEvent.data = Sonoffe::reads();
         MsgPacketizer::send(Serial, PKT_SONOFF_EVENTS, sonoffEvent);
         return;
     }
@@ -55,7 +61,7 @@ void emmittEspNowEvent()
 
 void regReq()
 {
-    if (Global::bootCount > 0)
+    if (ConnMan::data()->bootCount > 0)
         return;
 
     pkt_device_info_t devInfo;
@@ -72,15 +78,15 @@ void onPktSonoffWrite(pkt_sonoff_write_t data)
     DEBUG_LOG(data.index)
     DEBUG_LOG(" STATE:")
     DEBUG_LOG_LN(data.state)
-    Global::sonoff.writer(data.index, data.state);
+    Sonoffe::writer(data.index, data.state);
 }
 
 void onPktSonoffWrites(pkt_sonoff_writes_t data)
 {
-    Global::sonoff.writes(data.states);
+    Sonoffe::writes(data.states);
     if (data.trigger)
     {
-        Global::sonoff.start();
+        Sonoffe::event.start();
     }
 
     DEBUG_LOG("Sonoff writes :")
@@ -135,7 +141,8 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
     }
     gatewayStatus = status;
 
-    MsgPacketizer::subscribe(Serial, PKT_WIFI_TIMEOUT, &reBoot);
+    MsgPacketizer::subscribe(Serial, PKT_WIFI_TIMEOUT, [](u32_t timeout)
+                             { ConnMan::reboot(timeout, Sonoffe::pins(), Sonoffe::count()); });
     MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITE, &onPktSonoffWrite);
     MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITES, &onPktSonoffWrites);
     MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITES, &onPktSonoffWrites);
@@ -174,7 +181,8 @@ void setupEspNow(String path)
     esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
     esp_now_register_recv_cb(espnowRecvCallback);
     /* Subscribe To Espnow Packets */
-    MsgPacketizer::subscribe_manual(PKT_WIFI_TIMEOUT, &reBoot);
+    MsgPacketizer::subscribe_manual(PKT_WIFI_TIMEOUT, [](u32_t timeout)
+                                    { ConnMan::reboot(timeout, Sonoffe::pins(), Sonoffe::count()); });
     MsgPacketizer::subscribe_manual(PKT_SONOFF_WRITE, &onPktSonoffWrite);
     MsgPacketizer::subscribe_manual(PKT_SONOFF_WRITES, &onPktSonoffWrites);
     MsgPacketizer::subscribe_manual(PKT_GATEWAY_STATUS, &onPktGatewayStatus);

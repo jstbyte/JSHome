@@ -1,8 +1,6 @@
 #include "shared.h"
-#include <ESP8266WiFi.h>
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
-#include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <PubSubWiFi.h>
 #include <time.h>
@@ -13,7 +11,7 @@ PubSubWiFi *mqttClient;
 
 void onMqttTimeout()
 {
-    reBoot(0);
+    ConnMan::reboot(0, Sonoffe::pins(), Sonoffe::count());
 }
 
 void onMqttConnection(PubSubWiFi *client)
@@ -43,7 +41,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         unsigned short index = 255;
         unsigned short state = 255;
         sscanf(data, "%hu:%hu", &index, &state);
-        Global::sonoff.writer(index, state);
+        Sonoffe::writer(index, state);
         return;
     }
 
@@ -54,7 +52,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         doc["dev"] = "sonoff";
         doc["uid"] = ESP.getChipId();
         doc["mac"] = WiFi.macAddress();
-        doc["pin"] = Global::sonoff.count();
+        doc["pin"] = Sonoffe::count();
         serializeJson(doc, devInfoJsonDoc);
         String topic = String(topicDevInfo.c_str()) + "/" + ESP.getChipId();
         topic.replace("/req/", "/res/");
@@ -67,7 +65,7 @@ void emmittMqttEvent()
 {
     String topic = String(topicSonoff.c_str());
     topic.replace("/req/", "/res/");
-    mqttClient->publish(topic.c_str(), Global::sonoff.reads().c_str());
+    mqttClient->publish(topic.c_str(), Sonoffe::reads().c_str());
     DEBUG_LOG_LN("MQTT: event emitted.");
 }
 
@@ -76,7 +74,7 @@ void setupMqtt(String path)
     auto config = mqttClient->init(path);
     mqttClient->setCallback(mqttCallback);
     mqttClient->onConnection(onMqttConnection);
-    mqttClient->onTimeout(onMqttTimeout, Global::wifiRetryTimeout);
+    mqttClient->onTimeout(onMqttTimeout, ConnMan::data()->timeout);
     topicDevInfo = config.identity + "/req/devinfo";
     topicSonoff = config.identity + "/req/sonoff/" + String(ESP.getChipId());
     DEBUG_LOG_LN("MQTT: Topic Ready.");
