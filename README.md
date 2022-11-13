@@ -1,22 +1,7 @@
 # Instructions!
-> API: Environment: SONOFF > Required Data & Conf. Files Below;
+
+> Config For All
 ```ts
-type DevInfo = {
-  uid: number;
-  mac: string;
-  services: { name: string; data: any }[];
-};
-
-/* ( CA Cert Embaded Into Program Memory in app_mqtt.h 'maybe change in future' ) */
-const topicDevInfoSubscribe = "{SECRAT}/req/devinfo"; // No Data Required;
-const topicDevInfoPublish = "{SECRAT}/req/devinfo/{id}"; // Data: DevInfo;
-const topicSonoffSubscribe = "{SECRAT}/req/sonoff/{id}"; // Data eg. `index:state`;
-const topicSonoffPublish = "{SECRAT}/res/sonoff/{id}"; // Data eg. Ordered `[states]`;
-
-/* Pin No. 13 Used By IR Reciver Sensor */
-/* data/config/sonoff_pins.json */ [5, 4, 14, 12]
-/* data/config/sonoff_stat.json */ [1, 1, 1, 1]    
-
 /* data/config/espn_conf.json  */ {
   "channel": 6,
   "gateway": "FF:FF:FF:FF:FF:FF"
@@ -30,4 +15,28 @@ const topicSonoffPublish = "{SECRAT}/res/sonoff/{id}"; // Data eg. Ordered `[sta
   "mqttHOST": "broker.emqx.io",
   "mqttPORT": 8883
 }
+
+type DevInfo = {
+  uid: number;
+  mac: string;
+  services: { name: string; data: any }[];
+};
+/* ( CA Cert Embaded Into Program Memory in app_mqtt.h 'maybe change in future' ) */
+const topicDevInfoSubscribe = "{SECRAT}/req/devinfo"; // No Data Required;
+const topicDevInfoPublish = "{SECRAT}/req/devinfo/{id}"; // Data: DevInfo;
+```
+
+> ENV::rSONOFF > Required Data & Conf. Files Below;
+```ts
+const topicSonoffSubscribe = "{SECRAT}/req/sonoff/{id}"; // Data eg. `index:state`;
+const topicSonoffPublish = "{SECRAT}/res/sonoff/{id}"; // Data eg. Ordered `[states]`;
+
+/* Pin No. 13 Used By IR Reciver Sensor */
+/* data/config/sonoff_pins.json */ [5, 4, 14, 12]
+/* data/config/sonoff_stat.json */ [1, 1, 1, 1]
+```
+> ENV::rDoor > Required Data & Conf. Files Below;
+```ts
+  const topicDoorSubscribe = "{SECRAT}/req/door/{id}"; // Data eg. (time in sec.)|1|0|255;
+const topicDoorPublish = "{SECRAT}/res/door/{id}"; // Data eg. 1|0|255;
 ```
