@@ -22,9 +22,21 @@ void handleInfared()
             return;
         }
 
-        if (ir_result.value == IR_EQ && passMan.enter())
+        if (ir_result.value == IR_EQ)
         {
-            door.write(SERVO_DOOR_OPEN);
+            if (passMan.enter())
+            {
+                door.write(SERVO_DOOR_OPEN);
+            }
+            else
+            {
+                digitalWrite(12, LOW);
+                delay(10);
+                digitalWrite(12, HIGH);
+                delay(10);
+                digitalWrite(12, LOW);
+            }
+            passMan.reset();
             irrecv.resume();
             return;
         }
