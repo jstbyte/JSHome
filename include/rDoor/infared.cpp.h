@@ -7,7 +7,7 @@
 
 IRrecv irrecv(IR_RECV_PIN);
 decode_results ir_result;
-PassMan passMan("123");
+PassMan passMan("0147");
 
 void handleInfared()
 {
