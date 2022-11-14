@@ -8,7 +8,7 @@
 #define IR_USD 0x1FE906F
 #define IR_RPT 0x1FE10EF
 #define IR_EQ 0x1FE20DF
-#define IR_0 0x26B9C4DD
+#define IR_0 0x1FEE01F
 #define IR_1 0x1FE50AF
 #define IR_2 0x1FED827
 #define IR_3 0x1FEF807
