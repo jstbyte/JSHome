@@ -1,5 +1,6 @@
 #ifdef rDOOR
 #include "rDoor/mqtt.cpp.h"
+#include "rDoor/infared.cpp.h"
 #define DOOR_LOCK_SERVO_PIN 0
 
 Door door;
@@ -7,7 +8,10 @@ Door door;
 void setup()
 {
     LittleFS.begin();
-    Serial.begin(9600);
+    irrecv.enableIRIn();
+    Serial.begin(115200);
+    pinMode(12, OUTPUT);
+    digitalWrite(12, HIGH);
 
     if (ConnMan::recover(&door.isLocked, 1))
     {
@@ -34,6 +38,7 @@ void setup()
 
 void loop()
 {
+    handleInfared();
     door.timer.loop();
     if (mqttClient)
         mqttClient->eventLoop();
