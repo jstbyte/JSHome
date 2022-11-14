@@ -17,6 +17,7 @@ void handleInfared()
         if (ir_result.value == IR_POWER)
         {
             door.write(SERVO_DOOR_LOCK);
+            passMan.reset();
             irrecv.resume();
             return;
         }
