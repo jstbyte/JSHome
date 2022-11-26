@@ -9,6 +9,14 @@ String topicSonoff;
 String topicDevInfo;
 PubSubWiFi *mqttClient;
 
+void emmittMqttEvent()
+{
+    String topic = String(topicSonoff.c_str());
+    topic.replace("/req/", "/res/");
+    mqttClient->publish(topic.c_str(), Sonoffe::reads().c_str());
+    DEBUG_LOG_LN("MQTT: event emitted.");
+}
+
 void onMqttTimeout()
 {
     ConnMan::reboot(0, Sonoffe::pins(), Sonoffe::count());
@@ -18,9 +26,10 @@ void onMqttConnection(PubSubWiFi *client)
 {
     if (client->connected())
     {
-        client->subscribe(topicSonoff.c_str());
         client->subscribe(topicDevInfo.c_str());
+        client->subscribe(topicSonoff.c_str());
         DEBUG_LOG_LN("MQTT: subscribed.");
+        emmittMqttEvent();
         return;
     }
 }
@@ -62,14 +71,6 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         mqttClient->publish(topic.c_str(), devInfoJsonDoc.c_str());
         return;
     }
-}
-
-void emmittMqttEvent()
-{
-    String topic = String(topicSonoff.c_str());
-    topic.replace("/req/", "/res/");
-    mqttClient->publish(topic.c_str(), Sonoffe::reads().c_str());
-    DEBUG_LOG_LN("MQTT: event emitted.");
 }
 
 void setupMqtt(String path)
