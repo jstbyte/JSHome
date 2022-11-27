@@ -46,13 +46,18 @@ void loop()
     Sonoffe::event.loop();
     MsgPacketizer::parse();
     if (mqttClient)
+    {
         mqttClient->eventLoop();
-    if (ledState)
-        analogWrite(LED_BUILTIN, 255);
+        if (ledState)
+            analogWrite(LED_BUILTIN, 255);
+        else
+            analogWrite(LED_BUILTIN, 254);
+        ledState = !ledState;
+    }
     else
+    {
         analogWrite(LED_BUILTIN, 254);
-
-    ledState = !ledState;
+    }
     delay(100); // Balance CPU Loads;
 }
 #endif
