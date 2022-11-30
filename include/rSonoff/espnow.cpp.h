@@ -1,35 +1,8 @@
 #include "shared.h"
 #include <espnow.h>
 
-typedef struct
-{
-    u8_t channel;
-    u32_t timeout;
-    String gateway;
-} espnow_config_t;
-
 u8_t gatewayStatus = 0;
-uint8_t gatewayMac[6];
-
-espnow_config_t loadEspnowConfig(String path)
-{
-    espnow_config_t config;
-    StaticJsonDocument<128> configDoc;
-    File configFile = LittleFS.open(path, "r");
-    if (deserializeJson(configDoc, configFile) == DeserializationError::Ok)
-    {
-        config.channel = configDoc["channel"].as<u8_t>();
-        config.timeout = configDoc["timeout"].as<u32_t>();
-        config.gateway = configDoc["gateway"].as<String>();
-
-        configFile.close();
-        return config;
-    }
-    DEBUG_LOG_LN("ESPNOW: Config error!");
-
-    ConnMan::reboot(1);
-    return config;
-}
+uint8_t gatewayMac[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 void espnowRecvCallback(u8_t *mac, u8_t *payload, u8_t len)
 {
@@ -170,11 +143,8 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
     esp_now_send(mac, (u8_t *)packet.data.data(), packet.data.size());
 }
 
-void setupEspNow(String path)
+void setupEspNow()
 {
-    auto config = loadEspnowConfig(path);
-    str2mac(config.gateway.c_str(), gatewayMac);
-
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
     esp_now_init();

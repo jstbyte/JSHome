@@ -26,7 +26,7 @@ void setup()
     {
         ConnMan::data()->timeout--;
         mqttClient = new PubSubWiFi;
-        setupMqtt("/config/wlan_conf.json");
+        setupMqtt("/wconfig.json");
     }
     else
     {

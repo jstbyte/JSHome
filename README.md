@@ -2,12 +2,8 @@
 
 > Config For All
 ```ts
-/* data/config/espn_conf.json  */ {
-  "channel": 6,
-  "gateway": "FF:FF:FF:FF:FF:FF"
-}
 
-/* data/config/wlan_conf.json  */ {
+/* data/wconfig.json  */ {
   "identity": "secrat.domain.ext",
   "wlanSSID": "ssid@sta",
   "wlanPASS": "pass@sta",
@@ -28,15 +24,14 @@ const topicDevInfoPublish = "{SECRAT}/req/devinfo/{id}"; // Data: DevInfo;
 
 > ENV::rSONOFF > Required Data & Conf. Files Below;
 ```ts
+/* Pin No. 13 Used By IR Reciver Sensor */
+/* data/rsonoff.json */ [5, 4, 14, 12]
 const topicSonoffSubscribe = "{SECRAT}/req/sonoff/{id}"; // Data eg. `index:state`;
 const topicSonoffPublish = "{SECRAT}/res/sonoff/{id}"; // Data eg. Ordered `[states]`;
-
-/* Pin No. 13 Used By IR Reciver Sensor */
-/* data/config/sonoff_pins.json */ [5, 4, 14, 12]
-/* data/config/sonoff_stat.json */ [1, 1, 1, 1]
 ```
 > ENV::rDoor > Required Data & Conf. Files Below;
 ```ts
-  const topicDoorSubscribe = "{SECRAT}/req/door/{id}"; // Data eg. (time in sec.)|1|0|255;
+/* Pin No. 13 Used By IR Reciver Sensor */
+const topicDoorSubscribe = "{SECRAT}/req/door/{id}"; // Data eg. (time in sec.)|1|0|255;
 const topicDoorPublish = "{SECRAT}/res/door/{id}"; // Data eg. 1|0|255;
 ```
