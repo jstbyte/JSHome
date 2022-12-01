@@ -7,8 +7,12 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
+#include <RTCMemory.h>
 #include <Helper.h>
 #include <time.h>
+#ifndef RTC_DATA_SIZE
+#define RTC_DATA_SIZE 8
+#endif
 
 /* Mqtt SSL/TLS CA Root Certificate */
 const char mqtt_cert[] PROGMEM = R"EOF(
@@ -38,6 +42,13 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 typedef struct
 {
+    uint8_t bootCount;
+    uint32_t timeout;
+    uint8_t data[7];
+} RTCData;
+
+typedef struct
+{
     String identity;
     String wlanSSID;
     String wlanPASS;
@@ -45,6 +56,17 @@ typedef struct
     String mqttHOST;
     u32_t mqttPORT;
 } wlan_config_t;
+
+class ConnMan
+{
+protected:
+    static RTCMemory<RTCData> rtcData;
+
+public:
+    static RTCData *data();
+    static bool recover(void *data = nullptr, uint8_t len = 0);
+    static void reboot(uint32_t timeout, void *data = nullptr, uint8_t len = 0);
+};
 
 class PubSubWiFi : public PubSubClient
 {
@@ -63,4 +85,12 @@ public:
     static wlan_config_t loadWlanConfig(String path);
     void onConnection(std::function<void(PubSubWiFi *)> cb);
     void onTimeout(std::function<void(void)> cb, u32_t time);
+};
+
+class PubSubService
+{
+public:
+    virtual bool set(char *identity) = 0;
+    virtual bool req(char *payload) = 0;
+    virtual bool res() = 0;
 };

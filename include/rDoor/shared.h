@@ -3,9 +3,8 @@
 #include <LittleFS.h>
 #define SPIFFS LittleFS
 #include <ESP8266WiFi.h>
+#include <PubSubWiFi.h>
 #include <Debouncer.h>
-#include <ConnMan.h>
-#include "helper.h"
 #include <Servo.h>
 #include "spac.h"
 

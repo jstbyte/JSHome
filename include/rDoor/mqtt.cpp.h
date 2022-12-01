@@ -2,7 +2,6 @@
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
-#include <PubSubWiFi.h>
 #include <time.h>
 
 String topicDevInfo;
