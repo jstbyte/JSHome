@@ -243,3 +243,47 @@ void Sonoffe::writer(uint8_t index, uint8_t state)
         Sonoff::write(index, state);
     }
 }
+
+void Sonoffe::writer(char *csd)
+{
+    unsigned short index = 255;
+    unsigned short state = 255;
+    sscanf(csd, "%hu:%hu", &index, &state);
+    Sonoffe::writer(index, state);
+}
+
+void Sonoffe::press(uint64_t value)
+{
+    bool notify = true;
+    switch (value)
+    {
+    case IR_POWER:
+        if (Sonoffe::read() == HIGH)
+            return;
+        Sonoffe::writes(HIGH);
+        break;
+    case IR_MUTE:
+        if (Sonoffe::read() == LOW)
+            return;
+        Sonoffe::writes(LOW);
+        break;
+    case IR_MODE:
+        Sonoffe::writes();
+        break;
+    case IR_1:
+        Sonoffe::write(0);
+        break;
+    case IR_2:
+        Sonoffe::write(1);
+        break;
+    case IR_3:
+        Sonoffe::write(2);
+        break;
+    case IR_4:
+        Sonoffe::write(3);
+        break;
+    default:
+        return;
+    }
+    Sonoffe::event.start();
+}

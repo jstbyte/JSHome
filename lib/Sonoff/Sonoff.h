@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <Debouncer.h>
 #include <LittleFS.h>
+#include "Helper.h"
 #ifndef MAX_SONOFF_PIN_COUNT
 #define MAX_SONOFF_PIN_COUNT 8
 #endif
@@ -38,11 +39,14 @@ class Sonoffe : public Sonoff
 
 public:
     /*
-    state:::::::::::::::::::::::::::::::::
+    colon separated data = `[pin]:[state]`;
+    state::::::::::::::::::::::::::::::::::
         <128 = standard;
         +128 = Silent Mode, standard + 128;
          255 = Emmit Event Without Writing;
     */
+    static void writer(char *csd);
     static void writer(uint8_t index, uint8_t state);
+    static void press(uint64_t value); // IR Code;
     static Debouncer event;
 };
