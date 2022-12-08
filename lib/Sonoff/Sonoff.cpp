@@ -254,7 +254,6 @@ void Sonoffe::writer(char *csd)
 
 void Sonoffe::press(uint64_t value)
 {
-    bool notify = true;
     switch (value)
     {
     case IR_POWER:
