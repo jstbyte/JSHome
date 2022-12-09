@@ -11,9 +11,9 @@ void setup()
     irrecv.enableIRIn();
     Serial.begin(115200);
     Sonoffe::load("/rsonoff.json");
-    if (ConnMan::recover(Sonoffe::pins(), Sonoffe::count()))
+    if (BootMan::recover(Sonoffe::pins(), Sonoffe::count()))
     {
-        auto connMan = ConnMan::data();
+        auto connMan = BootMan::data();
         connMan->timeout = WIFI_RETRY_TIMEOUT;
         Sonoffe::writes(HIGH);
     }
@@ -22,13 +22,13 @@ void setup()
     digitalWrite(LED_BUILTIN, LOW);
 
     DEBUG_LOG("\nMQTT: & WiFi Timeout : ");
-    DEBUG_LOG_LN(ConnMan::data()->timeout);
+    DEBUG_LOG_LN(BootMan::data()->timeout);
     DEBUG_LOG("Device Mac Address : ");
     DEBUG_LOG_LN(WiFi.macAddress());
 
-    if (ConnMan::data()->timeout)
+    if (BootMan::data()->timeout)
     {
-        ConnMan::data()->timeout--;
+        BootMan::data()->timeout--;
         mqttClient = new PubSubWiFi;
         Sonoffe::event.setCallback(emmittMqttEvent, 500);
         setupMqtt("/wconfig.json");

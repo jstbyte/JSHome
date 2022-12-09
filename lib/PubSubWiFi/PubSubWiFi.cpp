@@ -1,29 +1,29 @@
 #include "PubSubWiFi.h"
 
-RTCMemory<RTCData> ConnMan::rtcData;
+RTCMemory<RTCData> BootMan::rtcData;
 
-RTCData *ConnMan::data()
+RTCData *BootMan::data()
 {
-    return ConnMan::rtcData.getData();
+    return BootMan::rtcData.getData();
 }
 
-bool ConnMan::recover(void *data, uint8_t len)
+bool BootMan::recover(void *data, uint8_t len)
 {
-    bool hasData = ConnMan::rtcData.begin();
+    bool hasData = BootMan::rtcData.begin();
     if (hasData)
     {
-        memcpy(data, ConnMan::data()->data, len);
+        memcpy(data, BootMan::data()->data, len);
     }
     return !hasData;
 }
 
-void ConnMan::reboot(uint32_t timeout, void *data, uint8_t len)
+void BootMan::reboot(uint32_t timeout, void *data, uint8_t len)
 {
-    auto _data = ConnMan::data();
+    auto _data = BootMan::data();
     memcpy(_data->data, data, len);
     _data->timeout = timeout;
     _data->bootCount++;
-    ConnMan::rtcData.save();
+    BootMan::rtcData.save();
     ESP.restart();
 }
 

@@ -18,7 +18,7 @@ void emmittMqttEvent()
 
 void onMqttTimeout()
 {
-    ConnMan::reboot(0, Sonoffe::pins(), Sonoffe::count());
+    BootMan::reboot(0, Sonoffe::pins(), Sonoffe::count());
 }
 
 void onMqttConnection(PubSubWiFi *client)
@@ -77,7 +77,7 @@ void setupMqtt(String path)
     auto config = mqttClient->init(path);
     mqttClient->setCallback(mqttCallback);
     mqttClient->onConnection(onMqttConnection);
-    mqttClient->onTimeout(onMqttTimeout, ConnMan::data()->timeout);
+    mqttClient->onTimeout(onMqttTimeout, BootMan::data()->timeout);
     topicDevInfo = config.identity + "/req/devinfo";
     topicSonoff = config.identity + "/req/sonoff/" + String(ESP.getChipId());
     DEBUG_LOG_LN("MQTT: Topic Ready.");

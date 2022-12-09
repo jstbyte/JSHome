@@ -57,7 +57,7 @@ typedef struct
     u32_t mqttPORT;
 } wlan_config_t;
 
-class ConnMan
+class BootMan
 {
 protected:
     static RTCMemory<RTCData> rtcData;

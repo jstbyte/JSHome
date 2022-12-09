@@ -34,7 +34,7 @@ void emmittEspNowEvent()
 
 void regReq()
 {
-    if (ConnMan::data()->bootCount > 0)
+    if (BootMan::data()->bootCount > 0)
         return;
 
     pkt_device_info_t devInfo;
@@ -115,7 +115,7 @@ void onPktUartGatewayStatus(pkt_gateway_status_t status)
     gatewayStatus = status;
 
     MsgPacketizer::subscribe(Serial, PKT_WIFI_TIMEOUT, [](u32_t timeout)
-                             { ConnMan::reboot(timeout, Sonoffe::pins(), Sonoffe::count()); });
+                             { BootMan::reboot(timeout, Sonoffe::pins(), Sonoffe::count()); });
     MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITE, &onPktSonoffWrite);
     MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITES, &onPktSonoffWrites);
     MsgPacketizer::subscribe(Serial, PKT_SONOFF_WRITES, &onPktSonoffWrites);
@@ -152,7 +152,7 @@ void setupEspNow()
     esp_now_register_recv_cb(espnowRecvCallback);
     /* Subscribe To Espnow Packets */
     MsgPacketizer::subscribe_manual(PKT_WIFI_TIMEOUT, [](u32_t timeout)
-                                    { ConnMan::reboot(timeout, Sonoffe::pins(), Sonoffe::count()); });
+                                    { BootMan::reboot(timeout, Sonoffe::pins(), Sonoffe::count()); });
     MsgPacketizer::subscribe_manual(PKT_SONOFF_WRITE, &onPktSonoffWrite);
     MsgPacketizer::subscribe_manual(PKT_SONOFF_WRITES, &onPktSonoffWrites);
     MsgPacketizer::subscribe_manual(PKT_GATEWAY_STATUS, &onPktGatewayStatus);
