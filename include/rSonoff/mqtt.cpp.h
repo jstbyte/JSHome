@@ -1,4 +1,4 @@
-#include "shared.h"
+#include "_defined.h"
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>

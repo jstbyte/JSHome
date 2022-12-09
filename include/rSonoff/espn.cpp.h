@@ -1,4 +1,4 @@
-#include "shared.h"
+#include "_defined.h"
 #include <espnow.h>
 
 u8_t gatewayStatus = 0;

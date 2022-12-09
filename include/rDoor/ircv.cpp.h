@@ -1,7 +1,7 @@
-#include "shared.h"
-#include <IRrecv.h>
-#include <IRutils.h>
+#include "_defined.h"
 #include <PassMan.h>
+#include <IRutils.h>
+#include <IRrecv.h>
 
 #define IR_RECV_PIN 13 /* Can Be Change */
 

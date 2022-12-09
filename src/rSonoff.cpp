@@ -1,7 +1,9 @@
 #ifdef rSONOFF
-#include "rSonoff/infared.cpp.h"
-#include "rSonoff/espnow.cpp.h"
+#include "rSonoff/espn.cpp.h"
 #include "rSonoff/mqtt.cpp.h"
+
+decode_results ir_result;
+IRrecv irrecv(IR_RECV_PIN);
 
 void setup()
 {
@@ -42,9 +44,14 @@ void setup()
 bool ledState = true;
 void loop()
 {
-    handleInfared();
-    Sonoffe::event.loop();
-    MsgPacketizer::parse();
+    if (irrecv.decode(&ir_result))
+    {
+        DEBUG_LOG("INFARED RECIVED : ");
+        Sonoffe::press(ir_result.value);
+        DEBUG_LOG_LN(ir_result.value);
+        irrecv.resume();
+    }
+
     if (mqttClient)
     {
         mqttClient->eventLoop();
@@ -58,6 +65,9 @@ void loop()
     {
         analogWrite(LED_BUILTIN, 254);
     }
+
+    MsgPacketizer::parse();
+    Sonoffe::event.loop();
     delay(100); // Balance CPU Loads;
 }
 #endif

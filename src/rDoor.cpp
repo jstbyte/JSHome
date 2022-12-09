@@ -1,6 +1,6 @@
 #ifdef rDOOR
 #include "rDoor/mqtt.cpp.h"
-#include "rDoor/infared.cpp.h"
+#include "rDoor/ircv.cpp.h"
 
 Door door;
 
