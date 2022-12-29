@@ -64,15 +64,15 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     {
         String devInfoJsonDoc;
         StaticJsonDocument<256> doc;
-        doc["uid"] = ESP.getChipId();
         doc["mac"] = WiFi.macAddress();
+        doc["name"] = WiFi.getHostname();
 
         JsonObject services = doc["services"].createNestedObject();
         services["name"] = "sonoff";
         services["data"] = Sonoffe::count();
 
         serializeJson(doc, devInfoJsonDoc);
-        String topic = String(topicDevInfo.c_str()) + "/" + ESP.getChipId();
+        String topic = String(topicDevInfo.c_str()) + "/" + WiFi.getHostname();
         topic.replace("/req/", "/res/");
         mqttClient.publish(topic.c_str(), devInfoJsonDoc.c_str());
         return;
@@ -96,7 +96,7 @@ void setup()
 
     /* Prepare Topics */
     topicDevInfo = config.identity + "/req/devinfo";
-    topicSonoff = config.identity + "/req/sonoff/" + String(ESP.getChipId());
+    topicSonoff = config.identity + "/req/sonoff/" + config.hostNAME;
     DEBUG_LOG_LN("MQTT: Topics Ready.");
 }
 
