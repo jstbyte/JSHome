@@ -101,27 +101,39 @@ uint8_t Sonoff::load(String path, bool states) /* Returns Loaded Pins Count */
     return Sonoff::_count;
 }
 
-void Sonoff::write(uint8_t index, uint8_t state) /* 0 | 1 | >1 */
+bool Sonoff::write(uint8_t index, uint8_t state) /* 0 | 1 | >1 */
 {
-    if (index < Sonoff::_count)
+    if (index >= Sonoff::_count)
     {
-        if (state > 1)
-        {
-            digitalWrite(Sonoff::_pins[index], !digitalRead(Sonoff::_pins[index]));
-        }
-        else
-        {
-            digitalWrite(Sonoff::_pins[index], state);
-        }
+        return false;
     }
+
+    bool currentState = digitalRead(Sonoff::_pins[index]);
+
+    if (state > 1)
+    {
+        digitalWrite(Sonoff::_pins[index], !currentState);
+        return true;
+    }
+
+    if (state != currentState)
+    {
+        digitalWrite(Sonoff::_pins[index], state);
+        return true;
+    }
+
+    return false;
 }
 
-void Sonoff::write(uint8_t index)
+bool Sonoff::write(uint8_t index)
 {
-    if (index < Sonoff::_count)
+    if (index >= Sonoff::_count)
     {
-        digitalWrite(Sonoff::_pins[index], !digitalRead(Sonoff::_pins[index]));
+        return false;
     }
+
+    digitalWrite(Sonoff::_pins[index], !digitalRead(Sonoff::_pins[index]));
+    return true;
 }
 
 void Sonoff::writes(uint8_t state)
@@ -140,36 +152,50 @@ void Sonoff::writes()
     }
 }
 
-void Sonoff::writes(uint8_t *states, uint8_t len)
+bool Sonoff::writes(uint8_t *states, uint8_t len)
 {
     if (Sonoff::_count != len)
     {
-        return;
+        return false;
     }
+
+    bool hasChanged = false;
 
     for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        Sonoff::write(i, states[i]);
+        if (states[i] != SONOFF_OVERFLOW)
+        {
+            hasChanged = Sonoff::write(i, states[i]) || hasChanged;
+        }
     }
+
+    return hasChanged;
 }
 
-void Sonoff::writes(String states)
+bool Sonoff::writes(String states)
 {
     StaticJsonDocument<128> jdoc;
     if (deserializeJson(jdoc, states) == DeserializationError::Ok)
     {
         uint8_t idx = 0;
+        bool hasChanged = false;
         for (JsonVariant v : jdoc.as<JsonArray>())
         {
             if (idx < Sonoff::_count)
             {
-                Sonoff::write(idx, v.as<u8>());
+                uint8_t value = v.as<u8>() - 1;
+                if (value != SONOFF_OVERFLOW)
+                {
+                    hasChanged = Sonoff::write(idx, value) || hasChanged;
+                }
                 idx++;
                 continue;
             }
             break;
         }
+        return hasChanged;
     }
+    return false;
 }
 
 uint8_t Sonoff::read(uint8_t index)
@@ -254,17 +280,18 @@ void Sonoffe::writer(uint8_t index, uint8_t state)
     }
 }
 
-void Sonoffe::writer(char *csd)
+void Sonoffe::writer(String states)
 {
-    unsigned short index = 255;
-    unsigned short state = 255;
-    sscanf(csd, "%hu:%hu", &index, &state);
-    Sonoffe::writer(index, state);
+    if (Sonoff::writes(states) || states == "")
+    {
+        Sonoffe::trigger(SONOFF_OVERFLOW);
+        return;
+    }
 }
 
 void Sonoffe::press(uint64_t value)
 {
-    uint8_t index = MULTI_PIN_INDEX;
+    uint8_t index = SONOFF_OVERFLOW;
     switch (value)
     {
     case IR_POWER:

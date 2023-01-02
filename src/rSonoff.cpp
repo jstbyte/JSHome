@@ -37,7 +37,7 @@ void onConnection(PubSubWiFi *client)
         client->subscribe(topicSonoff.c_str());
         DEBUG_LOG_LN("MQTT: subscribed.");
         analogWrite(LED_BUILTIN, 254);
-        sonoffire(MULTI_PIN_INDEX);
+        sonoffire(SONOFF_OVERFLOW);
         return;
     }
 
