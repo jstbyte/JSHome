@@ -21,7 +21,7 @@ PubSubWiFi mqttClient;
 decode_results ir_result;
 IRrecv irrecv(13); // D7;
 
-void sonoffire()
+void sonoffire(uint8_t pinIndex)
 {
     String topic = String(topicSonoff.c_str());
     topic.replace("/req/", "/res/");
@@ -37,7 +37,7 @@ void onConnection(PubSubWiFi *client)
         client->subscribe(topicSonoff.c_str());
         DEBUG_LOG_LN("MQTT: subscribed.");
         analogWrite(LED_BUILTIN, 254);
-        sonoffire();
+        sonoffire(MULTI_PIN_INDEX);
         return;
     }
 
@@ -89,8 +89,8 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH);
 
+    Sonoffe::setTrigger(sonoffire);
     auto config = mqttClient.init("/wconfig.json");
-    Sonoffe::event.setCallback(sonoffire, 500);
     mqttClient.onConnection(onConnection);
     mqttClient.setCallback(mqttCallback);
 
@@ -117,7 +117,6 @@ void loop()
 
     mqttClient.eventLoop();
     MsgPacketizer::parse();
-    Sonoffe::event.loop();
     delay(100); // Balance CPU Loads;
 }
 #endif

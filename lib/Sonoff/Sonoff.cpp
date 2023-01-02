@@ -140,11 +140,16 @@ void Sonoff::writes()
     }
 }
 
-void Sonoff::write_(uint8_t *states)
+void Sonoff::writes(uint8_t *states, uint8_t len)
 {
+    if (Sonoff::_count != len)
+    {
+        return;
+    }
+
     for (uint8_t i = 0; i < Sonoff::_count; i++)
     {
-        digitalWrite(Sonoff::_pins[i], states[i]);
+        Sonoff::write(i, states[i]);
     }
 }
 
@@ -158,7 +163,7 @@ void Sonoff::writes(String states)
         {
             if (idx < Sonoff::_count)
             {
-                digitalWrite(Sonoff::_pins[idx], v.as<u8>());
+                Sonoff::write(idx, v.as<u8>());
                 idx++;
                 continue;
             }
@@ -217,13 +222,18 @@ String Sonoff::reads()
 }
 
 /* Sonoffe Implementation */
-Debouncer Sonoffe::event;
+std::function<void(uint8_t)> Sonoffe::trigger;
+
+void Sonoffe::setTrigger(std::function<void(uint8_t)> tgr)
+{
+    Sonoffe::trigger = tgr;
+}
 
 void Sonoffe::writer(uint8_t index, uint8_t state)
 {
     if (state == 255)
     { /* Event Fire Only */
-        Sonoffe::event.start(true);
+        Sonoffe::trigger(index);
         return;
     }
 
@@ -234,7 +244,7 @@ void Sonoffe::writer(uint8_t index, uint8_t state)
             if (digitalRead(Sonoff::_pins[index]) != state)
             {
                 Sonoff::write(index, state);
-                Sonoffe::event.start();
+                Sonoffe::trigger(index);
             }
             return;
         }
@@ -254,6 +264,7 @@ void Sonoffe::writer(char *csd)
 
 void Sonoffe::press(uint64_t value)
 {
+    uint8_t index = MULTI_PIN_INDEX;
     switch (value)
     {
     case IR_POWER:
@@ -270,19 +281,20 @@ void Sonoffe::press(uint64_t value)
         Sonoffe::writes();
         break;
     case IR_1:
-        Sonoffe::write(0);
+        index = 0;
         break;
     case IR_2:
-        Sonoffe::write(1);
+        index = 1;
         break;
     case IR_3:
-        Sonoffe::write(2);
+        index = 2;
         break;
     case IR_4:
-        Sonoffe::write(3);
+        index = 3;
         break;
     default:
         return;
     }
-    Sonoffe::event.start();
+    Sonoffe::write(index);
+    Sonoffe::trigger(index);
 }
