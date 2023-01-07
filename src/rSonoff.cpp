@@ -97,7 +97,7 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
-    auto config = mqttClient.init("/wconfig.json");
+    auto config = mqttClient.init("/config.json");
     mqttClient.onConnection(onConnection);
     mqttClient.setCallback(mqttCallback);
     mqttClient.setC4C(devSync, 2000);
