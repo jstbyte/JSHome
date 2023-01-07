@@ -13,20 +13,28 @@
 #include "Sonoff.h"
 #include <time.h>
 #include "spac.h"
+#include "Debouncer.h"
 
 String topicSonoff;
+String topicDevSync;
 String topicDevInfo;
 PubSubWiFi mqttClient;
 
 decode_results ir_result;
 IRrecv irrecv(13); // D7;
+bool led = true;
 
-void sonoffire(uint8_t pinIndex)
+void devSync(uint8_t index = 128)
 {
-    String topic = String(topicSonoff.c_str());
-    topic.replace("/req/", "/res/");
-    mqttClient.publish(topic.c_str(), Sonoffe::reads().c_str());
-    DEBUG_LOG_LN("MQTT: event emitted.");
+    if (Sonoff::cmask() || index < 255)
+    {
+        String topic = String(topicSonoff.c_str());
+        topic.replace("/req/", "/res/");
+        mqttClient.publish(topic.c_str(), Sonoff::reads(index).c_str());
+        DEBUG_LOG_LN("MQTT: Sonoff event emitted.");
+    }
+
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 }
 
 void onConnection(PubSubWiFi *client)
@@ -34,14 +42,14 @@ void onConnection(PubSubWiFi *client)
     if (client->connected())
     {
         client->subscribe(topicDevInfo.c_str());
+        client->subscribe(topicDevSync.c_str());
         client->subscribe(topicSonoff.c_str());
         DEBUG_LOG_LN("MQTT: subscribed.");
-        analogWrite(LED_BUILTIN, 254);
-        sonoffire(SONOFF_OVERFLOW);
+        devSync();
         return;
     }
 
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN, LOW);
 }
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
@@ -56,9 +64,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     DEBUG_LOG_LN(data);
 
     if (topicSonoff == topic)
-    {
-        return Sonoffe::writer(data);
-    }
+        return (void)Sonoff::writes(data);
+
+    if (topicDevSync == topic)
+        return devSync();
 
     if (topicDevInfo == topic)
     {
@@ -69,7 +78,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
         JsonObject services = doc["services"].createNestedObject();
         services["name"] = "sonoff";
-        services["data"] = Sonoffe::count();
+        services["data"] = Sonoff::count();
 
         serializeJson(doc, devInfoJsonDoc);
         String topic = String(topicDevInfo.c_str()) + "/" + WiFi.getHostname();
@@ -84,39 +93,33 @@ void setup()
     LittleFS.begin();
     irrecv.enableIRIn();
     Serial.begin(115200);
-    Sonoffe::load("/rsonoff.json");
-    Sonoffe::writes(HIGH);
+    Sonoff::begin("/sonoff.txt");
     pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN, LOW);
 
-    Sonoffe::setTrigger(sonoffire);
     auto config = mqttClient.init("/wconfig.json");
     mqttClient.onConnection(onConnection);
     mqttClient.setCallback(mqttCallback);
+    mqttClient.setC4C(devSync, 2000);
 
     /* Prepare Topics */
-    topicDevInfo = config.identity + "/req/devinfo";
+    topicDevInfo = config.identity + "/req/devinfo"; // Use to Pair Device;
+    topicDevSync = config.identity + "/req/devsync/" + config.hostNAME;
     topicSonoff = config.identity + "/req/sonoff/" + config.hostNAME;
     DEBUG_LOG_LN("MQTT: Topics Ready.");
 }
 
-bool ledState = true;
 void loop()
 {
     if (irrecv.decode(&ir_result))
     {
-        if (!mqttClient.connected())
-            digitalWrite(LED_BUILTIN, LOW);
         DEBUG_LOG("INFARED RECIVED : ");
-        Sonoffe::press(ir_result.value);
+        Sonoff::press(ir_result.value);
         DEBUG_LOG_LN(ir_result.value);
         irrecv.resume();
-        if (!mqttClient.connected())
-            digitalWrite(LED_BUILTIN, HIGH);
     }
 
     mqttClient.eventLoop();
-    MsgPacketizer::parse();
     delay(100); // Balance CPU Loads;
 }
 #endif

@@ -77,6 +77,11 @@ protected:
     std::function<void(void)> _onTimeout;
     std::function<void(PubSubWiFi *)> _onConnection;
 
+    // c4c = check for changes properties;
+    u32_t _c4cInterval;
+    unsigned long long _c4cTimestamp;
+    std::function<void(uint8_t)> _c4cFunc;
+
 public:
     void eventLoop();
     void resetTimeout(u32_t time);
@@ -85,6 +90,7 @@ public:
     static wlan_config_t loadWlanConfig(String path);
     void onConnection(std::function<void(PubSubWiFi *)> cb);
     void onTimeout(std::function<void(void)> cb, u32_t time);
+    void setC4C(std::function<void(uint8_t)> cb, u32_t time);
 };
 
 class PubSubService
