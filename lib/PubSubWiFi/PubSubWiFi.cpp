@@ -33,12 +33,6 @@ void PubSubWiFi::eventLoop()
 {
     if (loop())
     {
-        /* Check for Changes */
-        if (_c4cInterval && ((u32_t)(millis() - _c4cTimestamp) > _c4cInterval))
-        {
-            _c4cFunc(255);
-            _c4cTimestamp = millis();
-        }
         return;
     }
 
@@ -47,8 +41,6 @@ void PubSubWiFi::eventLoop()
         configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
         if (connect(uuid("ESP8266JST-").c_str()))
         {
-            _c4cTimestamp = millis();
-
             DEBUG_LOG_LN("MQTT: connected.");
             if (_onConnection)
                 _onConnection(this);
@@ -122,7 +114,6 @@ void PubSubWiFi::init(wlan_config_t *config)
 
     _timestamp = 0;
     _connTimeout = 0;
-    _c4cInterval = 0;
     setClient(*_wifiClient);
     setServer(mqttHost, config->mqttPORT);
 }
@@ -159,10 +150,4 @@ void PubSubWiFi::onTimeout(std::function<void(void)> cb, u32_t time)
 {
     _connTimeout = time;
     _onTimeout = cb;
-}
-
-void PubSubWiFi::setC4C(std::function<void(uint8_t)> cb, u32_t time)
-{
-    _c4cFunc = cb;
-    _c4cInterval = time;
 }
