@@ -57,26 +57,17 @@ bool Sonoff::write(uint8_t index, uint8_t state)
         bool currentState = digitalRead(Sonoff::_pins[index]);
 
         if (state > 1)
-        {
             digitalWrite(Sonoff::_pins[index], !currentState);
-            // if (Sonoff::_cmask & (1 << index))
-            //     Sonoff::_cmask &= ~(1 << index);
-            // else
-            Sonoff::_cmask |= (1 << index);
-            return true;
-        }
-
-        if (state != currentState)
-        {
+        else if (state != currentState)
             digitalWrite(Sonoff::_pins[index], state);
-            // if (Sonoff::_cmask & (1 << index))
-            //     Sonoff::_cmask &= ~(1 << index);
-            // else
-            Sonoff::_cmask |= (1 << index);
-            return true;
-        }
+        else
+            return false; /* No Pin Affected */
+        Sonoff::_cmask |= (1 << index);
 
-        return false;
+#ifdef ENABLE_SONOFF_EVENT
+        Sonoff::task.restartDelayed(Sonoff::delay);
+#endif
+        return true;
     }
 
     bool hasChanged = false;
@@ -170,3 +161,18 @@ bool Sonoff::press(uint64_t value)
     }
     return hasChanged;
 }
+
+#ifdef ENABLE_SONOFF_EVENT
+Task Sonoff::task;
+uint32_t Sonoff::delay = 0;
+
+void Sonoff::taskSetup(Scheduler &ts, TaskCallback cb, uint32_t delay, bool check)
+{
+    if (check && !Sonoff::_count)
+        return;
+
+    Sonoff::task.set(0, 1, cb);
+    ts.addTask(Sonoff::task);
+    Sonoff::delay = delay;
+}
+#endif

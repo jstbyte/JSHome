@@ -2,6 +2,10 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 #include "Helper.h"
+#define ENABLE_SONOFF_EVENT
+#ifdef ENABLE_SONOFF_EVENT // Check;
+#include <TaskSchedulerDeclarations.h>
+#endif
 
 /* ::::RULES DEFINED BY AUTHOR::::;
  * External Read & Write as String;
@@ -13,7 +17,7 @@
  */
 
 class Sonoff
-{
+{ /* Enable Event  :  ENABLE_SONOFF_EVENT */
 protected:
     static uint8_t _count;   // Pin Counter;
     static uint8_t _cmask;   // Changed Msk;
@@ -30,4 +34,11 @@ public:
     static bool writes(char *extrw);                     // External RW  From String;
     static void reset();                                 // Reset  pins changed mask;
     static bool press(uint64_t value);                   // IR remote  key interface;
+
+#ifdef ENABLE_SONOFF_EVENT
+    static Task task;
+    static uint32_t delay;
+    static void taskSetup(Scheduler &ts, TaskCallback cb,
+                          uint32_t delay, bool check = false);
+#endif
 };
