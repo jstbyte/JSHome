@@ -4,6 +4,7 @@
 #define SPIFFS LittleFS
 #include <CertStoreBearSSL.h>
 #include <WiFiClientSecure.h>
+#include <TaskScheduler.h>
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 #include <PubSubWiFi.h>
@@ -13,43 +14,36 @@
 #include "Sonoff.h"
 #include <time.h>
 #include "spac.h"
-#include "Debouncer.h"
 
-String topicSonoff;
-String topicDevSync;
-String topicDevInfo;
+String tSonoff;
+String tDevSync;
+String tDevInfo;
 PubSubWiFi mqttClient;
 
 decode_results ir_result;
 IRrecv irrecv(13); // D7;
+Scheduler scheduler;
 bool led = true;
 
-void devSync(uint8_t index = 128)
+void sonoffire()
 {
-    if (Sonoff::cmask() || index < 255)
-    {
-        String topic = String(topicSonoff.c_str());
-        topic.replace("/req/", "/res/");
-        mqttClient.publish(topic.c_str(), Sonoff::reads(index).c_str());
-        DEBUG_LOG_LN("MQTT: Sonoff event emitted.");
-    }
-
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    auto tpk = req2res(tSonoff);
+    uint8_t sonoffi = Sonoff::cmask() ? 255 : 128;
+    mqttClient.publish(tpk.c_str(), Sonoff::reads(sonoffi).c_str());
+    DEBUG_LOG_LN("MQTT: Invocked sonoffire.");
 }
 
 void onConnection(PubSubWiFi *client)
 {
     if (client->connected())
     {
-        client->subscribe(topicDevInfo.c_str());
-        client->subscribe(topicDevSync.c_str());
-        client->subscribe(topicSonoff.c_str());
-        DEBUG_LOG_LN("MQTT: subscribed.");
-        devSync();
+        client->subscribe(tDevInfo.c_str());
+        client->subscribe(tDevSync.c_str());
+        client->subscribe(tSonoff.c_str());
+        DEBUG_LOG_LN("MQTT: Subscribed.");
+        sonoffire();
         return;
     }
-
-    digitalWrite(LED_BUILTIN, LOW);
 }
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
@@ -63,13 +57,15 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     DEBUG_LOG(" payload:: ")
     DEBUG_LOG_LN(data);
 
-    if (topicSonoff == topic)
+    if (tSonoff == topic)
         return (void)Sonoff::writes(data);
 
-    if (topicDevSync == topic)
-        return devSync();
+    if (tDevSync == topic)
+    {
+        sonoffire();
+    }
 
-    if (topicDevInfo == topic)
+    if (tDevInfo == topic)
     {
         String devInfoJsonDoc;
         StaticJsonDocument<256> doc;
@@ -81,7 +77,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         services["data"] = Sonoff::count();
 
         serializeJson(doc, devInfoJsonDoc);
-        String topic = String(topicDevInfo.c_str()) + "/" + WiFi.getHostname();
+        String topic = String(tDevInfo.c_str()) + "/" + WiFi.getHostname();
         topic.replace("/req/", "/res/");
         mqttClient.publish(topic.c_str(), devInfoJsonDoc.c_str());
         return;
@@ -97,16 +93,16 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
+    Sonoff::taskSetup(scheduler, &sonoffire, 1000, true);
     auto config = mqttClient.init("/config.json");
     mqttClient.onConnection(onConnection);
     mqttClient.setCallback(mqttCallback);
-    mqttClient.setC4C(devSync, 2000);
 
     /* Prepare Topics */
-    topicDevInfo = config.identity + "/req/devinfo"; // Use to Pair Device;
-    topicDevSync = config.identity + "/req/devsync/" + config.hostNAME;
-    topicSonoff = config.identity + "/req/sonoff/" + config.hostNAME;
-    DEBUG_LOG_LN("MQTT: Topics Ready.");
+    tDevInfo = config.identity + "/req/devinfo"; // Use to Pair Device;
+    tDevSync = config.identity + "/req/devsync/" + config.hostNAME;
+    tSonoff = config.identity + "/req/sonoff/" + config.hostNAME;
+    DEBUG_LOG_LN("(((Device Setup Completed)))");
 }
 
 void loop()
@@ -120,6 +116,6 @@ void loop()
     }
 
     mqttClient.eventLoop();
-    delay(100); // Balance CPU Loads;
+    scheduler.execute();
 }
 #endif
