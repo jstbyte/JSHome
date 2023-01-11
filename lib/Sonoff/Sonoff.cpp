@@ -1,6 +1,6 @@
 #include "Sonoff.h"
 
-uint8_t Sonoff::_pins[8];
+DigiPin Sonoff::_pins[8];
 uint8_t Sonoff::_cmask = 0;
 uint8_t Sonoff::_count = 0;
 
@@ -14,7 +14,7 @@ uint8_t Sonoff::cmask() // Geter
     return Sonoff::_cmask;
 }
 
-uint8_t *Sonoff::pins() // Geter
+DigiPin *Sonoff::pins() // Geter
 {
     return Sonoff::_pins;
 }
@@ -26,15 +26,26 @@ bool Sonoff::begin(String path)
     while (file.available())
     {
         unsigned short pin = 255;
-        unsigned short state = 255;
+        unsigned short cmd = 255;
         String csd = file.readStringUntil(';');
-        sscanf(csd.c_str(), "%hu:%hu", &pin, &state);
+        sscanf(csd.c_str(), "%hu:%hu", &pin, &cmd);
 
-        if (pin != 255 || state != 255)
+        if (pin != 255 || cmd != 255)
         {
-            pinMode(pin, OUTPUT);
-            digitalWrite(pin, state);
-            Sonoff::_pins[Sonoff::_count] = pin;
+            Sonoff::_pins[Sonoff::_count].dir = INPUT;
+
+            if (cmd == 10)
+                pinMode(pin, INPUT);
+            else if (cmd == 11)
+                pinMode(pin, INPUT_PULLUP);
+            else
+            {
+                Sonoff::_pins[Sonoff::_count].dir = OUTPUT;
+                pinMode(pin, OUTPUT);
+                digitalWrite(pin, cmd);
+            }
+
+            Sonoff::_pins[Sonoff::_count].pin = pin;
             Sonoff::_count++;
         }
     }
@@ -46,7 +57,7 @@ bool Sonoff::begin(String path)
 bool Sonoff::read(uint8_t index)
 {
     return ((index < Sonoff::_count)
-                ? digitalRead(Sonoff::_pins[index])
+                ? digitalRead(Sonoff::_pins[index].pin)
                 : 0);
 }
 
@@ -54,14 +65,14 @@ bool Sonoff::write(uint8_t index, uint8_t state)
 {
     if (index < Sonoff::_count)
     {
-        bool currentState = digitalRead(Sonoff::_pins[index]);
-
-        if (state > 1)
-            digitalWrite(Sonoff::_pins[index], !currentState);
-        else if (state != currentState)
-            digitalWrite(Sonoff::_pins[index], state);
-        else
-            return false; /* No Pin Affected */
+        if (Sonoff::_pins[index].dir == OUTPUT)
+        {
+            bool currentState = digitalRead(Sonoff::_pins[index].pin);
+            state = (state > 1) ? !currentState : 1;
+            if (state == currentState)
+                return false; /* No Pin Affected */
+            digitalWrite(Sonoff::_pins[index].pin, !currentState);
+        }
         Sonoff::_cmask |= (1 << index);
 
 #ifdef ENABLE_SONOFF_EVENT

@@ -16,17 +16,23 @@
  * STATE >1 mean pin flip | toggle;
  */
 
+typedef struct
+{
+    uint8_t pin; // Pin    Number;
+    uint8_t dir; // Pin Direction;
+} DigiPin;
+
 class Sonoff
 { /* Enable Event  :  ENABLE_SONOFF_EVENT */
 protected:
     static uint8_t _count;   // Pin Counter;
     static uint8_t _cmask;   // Changed Msk;
-    static uint8_t _pins[8]; // Pin Numbers;
+    static DigiPin _pins[8]; // Pin Numbers;
 
 public:
     static uint8_t count();                              // Get available pins count;
     static uint8_t cmask();                              // Get  changed masked byte;
-    static uint8_t *pins();                              // Get IO pin numbers array;
+    static DigiPin *pins();                              // Get IO pin numbers array;
     static bool begin(String path);                      // Load & Init Pins from FS;
     static bool read(uint8_t index);                     // Read pin state  by index;
     static bool write(uint8_t index, uint8_t state = 3); // Write Pin State By Index;
