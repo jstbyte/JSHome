@@ -16,3 +16,10 @@ String uuid(String prefix)
 {
     return (prefix + String(random(0xffff), HEX));
 }
+
+String req2res(String topic)
+{
+    String _topic = String(topic.c_str());
+    _topic.replace("/req/", "/res/");
+    return _topic;
+}
