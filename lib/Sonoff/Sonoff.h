@@ -16,30 +16,24 @@
  * STATE >1 mean pin flip | toggle;
  */
 
-typedef struct
-{
-    uint8_t pin; // Pin    Number;
-    uint8_t dir; // Pin Direction;
-} DigiPin;
-
 class Sonoff
 { /* Enable Event  :  ENABLE_SONOFF_EVENT */
 protected:
-    static uint8_t _count;   // Pin Counter;
-    static uint8_t _cmask;   // Changed Msk;
-    static DigiPin _pins[8]; // Pin Numbers;
+    static uint8_t _count;    // Pin Counter;
+    static uint8_t _cmask;    // Changed Msk;
+    static uint8_t _pnums[8]; // Pin Numbers;
 
 public:
-    static uint8_t count();                              // Get available pins count;
-    static uint8_t cmask();                              // Get  changed masked byte;
-    static DigiPin *pins();                              // Get IO pin numbers array;
-    static bool begin(String path);                      // Load & Init Pins from FS;
-    static bool read(uint8_t index);                     // Read pin state  by index;
-    static bool write(uint8_t index, uint8_t state = 3); // Write Pin State By Index;
-    static String reads(uint8_t index = 128);            // Retrun Externl RW String;
-    static bool writes(char *extrw);                     // External RW  From String;
-    static void reset();                                 // Reset  pins changed mask;
-    static bool press(uint64_t value);                   // IR remote  key interface;
+    static uint8_t count();                                 // Get available pins count;
+    static uint8_t cmask();                                 // Get  changed masked byte;
+    static uint8_t *pins();                                 // Get IO pin numbers array;
+    static uint8_t begin(String path);                      // Load & Init Pins from FS;
+    static uint8_t read(uint8_t index);                     // Read pin state  by index;
+    static uint8_t write(uint8_t index, uint8_t state = 3); // Write Pin State By Index;
+    static String reads(uint8_t index = 128);               // Retrun Externl RW String;
+    static uint8_t writes(char *extrw);                     // External RW  From String;
+    static uint8_t press(uint64_t value);                   // IR remote  key interface;
+    static void reset();                                    // Reset  pins changed mask;
 
 #ifdef ENABLE_SONOFF_EVENT
     static Task task;
