@@ -23,7 +23,7 @@ PubSubWiFi mqttClient;
 decode_results ir_result;
 IRrecv irrecv(13); // D7;
 Scheduler scheduler;
-bool led = true;
+Task ledTask;
 
 void sonoffire()
 {
@@ -41,9 +41,13 @@ void onConnection(PubSubWiFi *client)
         client->subscribe(tDevSync.c_str());
         client->subscribe(tSonoff.c_str());
         DEBUG_LOG_LN("MQTT: Subscribed.");
+        analogWrite(LED_BUILTIN, 254);
+        ledTask.disable();
         sonoffire();
         return;
     }
+
+    ledTask.enable();
 }
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
@@ -84,14 +88,28 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     }
 }
 
+void ledTaskRunner()
+{
+    uint8_t state = !digitalRead(LED_BUILTIN);
+    digitalWrite(LED_BUILTIN, state);
+    if (state)
+    {
+        ledTask.delay(1995);
+    }
+}
+
 void setup()
 {
     LittleFS.begin();
     irrecv.enableIRIn();
     Serial.begin(115200);
     Sonoff::begin("/sonoff.txt");
+
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+    ledTask.set(5, TASK_FOREVER, &ledTaskRunner);
+    scheduler.addTask(ledTask);
+    ledTask.enable();
 
     Sonoff::taskSetup(scheduler, &sonoffire, 1000, true);
     auto config = mqttClient.init("/config.json");
