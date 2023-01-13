@@ -103,7 +103,7 @@ void PubSubWiFi::init(wlan_config_t *config)
     {
         DEBUG_LOG_LN("::Secure.");
         _wifiClient = new BearSSL::WiFiClientSecure();
-        auto caCert = new BearSSL::X509List(mqtt_cert);
+        auto caCert = new BearSSL::X509List(_pemCert);
         ((WiFiClientSecure *)_wifiClient)->setTrustAnchors(caCert);
     }
     else
