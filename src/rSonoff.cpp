@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #define SPIFFS LittleFS
 #include <CertStoreBearSSL.h>
+#include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
 #include <TaskScheduler.h>
 #include <ESP8266WiFi.h>
@@ -12,65 +13,40 @@
 #include <IRrecv.h>
 #include "Helper.h"
 #include "Sonoff.h"
+#include "certs.h"
 #include <time.h>
 #include "spac.h"
+#define D7 13
 
-String tSonoff;
-String tDevSync;
-String tDevInfo;
-PubSubWiFi mqttClient;
-
+const char version[] = "3.0.1";
+PubSubX mqttClient(_emqxRCA);
 decode_results ir_result;
-IRrecv irrecv(13); // D7;
 Scheduler scheduler;
+IRrecv irrecv(D7);
 Task ledTask;
+
+void blinkLed()
+{
+    uint8_t state = !digitalRead(LED_BUILTIN);
+    digitalWrite(LED_BUILTIN, state);
+    if (state)
+        ledTask.delay(1995);
+}
 
 void sonoffire()
 {
-    auto tpk = req2res(tSonoff);
     uint8_t sonoffi = Sonoff::cmask() ? 255 : 128;
-    mqttClient.publish(tpk.c_str(), Sonoff::reads(sonoffi).c_str());
+    mqttClient.res("sonoff", Sonoff::reads(sonoffi).c_str());
     DEBUG_LOG_LN("MQTT: Invocked sonoffire.");
 }
 
-void onConnection(PubSubWiFi *client)
+void mqttDevInfo(String topic, String data)
 {
-    if (client->connected())
+    if (topic.startsWith("devinfo"))
     {
-        client->subscribe(tDevInfo.c_str());
-        client->subscribe(tDevSync.c_str());
-        client->subscribe(tSonoff.c_str());
-        DEBUG_LOG_LN("MQTT: Subscribed.");
-        analogWrite(LED_BUILTIN, 254);
-        ledTask.disable();
-        sonoffire();
-        return;
-    }
+        if (data == "sync")
+            return sonoffire();
 
-    ledTask.enable();
-}
-
-void mqttCallback(char *topic, byte *payload, unsigned int length)
-{
-    char data[length + 1];
-    data[length] = '\0';
-    strncpy(data, (char *)payload, length);
-
-    DEBUG_LOG("MQTT: topic recived : ");
-    DEBUG_LOG(topic);
-    DEBUG_LOG(" payload:: ")
-    DEBUG_LOG_LN(data);
-
-    if (tSonoff == topic)
-        return (void)Sonoff::writes(data);
-
-    if (tDevSync == topic)
-    {
-        sonoffire();
-    }
-
-    if (tDevInfo == topic)
-    {
         String devInfoJsonDoc;
         StaticJsonDocument<256> doc;
         doc["mac"] = WiFi.macAddress();
@@ -81,21 +57,62 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         services["data"] = Sonoff::count();
 
         serializeJson(doc, devInfoJsonDoc);
-        String topic = String(tDevInfo.c_str()) + "/" + WiFi.getHostname();
-        topic.replace("/req/", "/res/");
-        mqttClient.publish(topic.c_str(), devInfoJsonDoc.c_str());
+        mqttClient.res("devinfo", devInfoJsonDoc.c_str());
+        return;
+    }
+
+    if (data && topic.startsWith("update"))
+    {
+        if (data.isEmpty())
+            return (void)mqttClient.res("update", version);
+
+        mqttClient.disconnect();
+        BearSSL::WiFiClientSecure client;
+        BearSSL::X509List x509(_firebaseRCA);
+        client.setTrustAnchors(&x509);
+
+        if (client.probeMaxFragmentLength("server", 443, 1024))
+            client.setBufferSizes(1024, 1024);
+
+        ESPhttpUpdate.setLedPin(LED_BUILTIN);
+        ESPhttpUpdate.update(client, data);
         return;
     }
 }
 
-void ledTaskRunner()
+void mqttCallback(char *tpk, byte *dta, uint32_t length)
 {
-    uint8_t state = !digitalRead(LED_BUILTIN);
-    digitalWrite(LED_BUILTIN, state);
-    if (state)
+    auto topic = PubSubX::parse(tpk);
+    auto data = PubSubX::parse(dta, length);
+
+    DEBUG_LOG("MQTT: topic recived : `");
+    DEBUG_LOG(topic);
+    DEBUG_LOG("` payload:: ")
+    DEBUG_LOG_LN(data);
+
+    if (topic.startsWith("sonoff"))
+        return (void)Sonoff::writes((char *)data.c_str());
+
+    mqttDevInfo(topic, data); /* System Info & Update */
+}
+
+void onConnection(PubSubWiFi *client)
+{
+    if (client->connected())
     {
-        ledTask.delay(1995);
+        ((PubSubX *)client)->sub("devinfo", true);
+        ((PubSubX *)client)->sub("sonoff", true);
+        ((PubSubX *)client)->sub("update", true);
+        ((PubSubX *)client)->sub("devinfo");
+        ((PubSubX *)client)->sub("update");
+        DEBUG_LOG_LN("MQTT: Subscribed.");
+        analogWrite(LED_BUILTIN, 254);
+        ledTask.disable();
+        sonoffire();
+        return;
     }
+
+    ledTask.enable();
 }
 
 void setup()
@@ -107,7 +124,7 @@ void setup()
 
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-    ledTask.set(5, TASK_FOREVER, &ledTaskRunner);
+    ledTask.set(5, TASK_FOREVER, &blinkLed);
     scheduler.addTask(ledTask);
     ledTask.enable();
 
@@ -116,10 +133,6 @@ void setup()
     mqttClient.onConnection(onConnection);
     mqttClient.setCallback(mqttCallback);
 
-    /* Prepare Topics */
-    tDevInfo = config.identity + "/req/devinfo"; // Use to Pair Device;
-    tDevSync = config.identity + "/req/devsync/" + config.hostNAME;
-    tSonoff = config.identity + "/req/sonoff/" + config.hostNAME;
     DEBUG_LOG_LN("(((Device Setup Completed)))");
 }
 

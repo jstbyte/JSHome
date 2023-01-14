@@ -108,9 +108,9 @@ String Sonoff::reads(uint8_t index)
     return result;
 }
 
-uint8_t Sonoff::writes(char *extrw)
+uint8_t Sonoff::writes(String extrw)
 {
-    char *token = strtok(extrw, ";");
+    char *token = strtok((char *)extrw.c_str(), ";");
     bool hasChanged = false;
     while (token != NULL)
     {

@@ -28,6 +28,5 @@
 #define IR_9 0x1FE9867
 
 String uuid(String prefix);                        // Generate Random UUID With Prefix
-String req2res(String topic);                      // Replace req to replace string
 void str2mac(const char *macStr, uint8_t *macArr); // "8d-75-92-6a-40-e6"->uint8_t mac[6]
 void mac2str(const uint8_t *macArr, char *macStr); // uint8_t mac[6] -> "8d-75-92-6a-40-e6"

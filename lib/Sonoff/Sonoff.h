@@ -31,7 +31,7 @@ public:
     static uint8_t read(uint8_t index);                     // Read pin state  by index;
     static uint8_t write(uint8_t index, uint8_t state = 3); // Write Pin State By Index;
     static String reads(uint8_t index = 128);               // Retrun Externl RW String;
-    static uint8_t writes(char *extrw);                     // External RW  From String;
+    static uint8_t writes(String extrw);                    // External RW  From String;
     static uint8_t press(uint64_t value);                   // IR remote  key interface;
     static void reset();                                    // Reset  pins changed mask;
 
