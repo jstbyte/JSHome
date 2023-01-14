@@ -199,3 +199,16 @@ String PubSubX::parse(byte *payload, unsigned int length)
     }
     return String();
 }
+
+HTTPUpdateResult PubSubX::otaUpdate(const char *pemCert, String url)
+{
+    BearSSL::WiFiClientSecure client;
+    BearSSL::X509List x509(pemCert);
+    client.setTrustAnchors(&x509);
+
+    if (client.probeMaxFragmentLength("server", 443, 1024))
+        client.setBufferSizes(1024, 1024);
+
+    ESPhttpUpdate.setLedPin(LED_BUILTIN);
+    return ESPhttpUpdate.update(client, url);
+}

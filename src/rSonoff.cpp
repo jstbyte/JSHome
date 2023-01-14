@@ -18,7 +18,7 @@
 #include "spac.h"
 #define D7 13
 
-const char version[] = "3.0.1";
+const char version[] = "v3.0.1";
 PubSubX mqttClient(_emqxRCA);
 decode_results ir_result;
 Scheduler scheduler;
@@ -67,15 +67,7 @@ void mqttDevInfo(String topic, String data)
             return (void)mqttClient.res("update", version);
 
         mqttClient.disconnect();
-        BearSSL::WiFiClientSecure client;
-        BearSSL::X509List x509(_firebaseRCA);
-        client.setTrustAnchors(&x509);
-
-        if (client.probeMaxFragmentLength("server", 443, 1024))
-            client.setBufferSizes(1024, 1024);
-
-        ESPhttpUpdate.setLedPin(LED_BUILTIN);
-        ESPhttpUpdate.update(client, data);
+        PubSubX::otaUpdate(_firebaseRCA, data);
         return;
     }
 }

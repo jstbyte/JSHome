@@ -27,4 +27,6 @@ const topics = [
   {topic: 'sonoff' , payload: `[index]:[state];...`}
 ]
 
+// TODO: Future:: https://api.github.com/repos/jstbyte/Jiot/releases/latest;
+
 ```

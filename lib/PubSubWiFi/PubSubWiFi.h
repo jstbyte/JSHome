@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #define SPIFFS LittleFS
 #include <WiFiClientSecure.h>
+#include <ESP8266httpUpdate.h>
 #include <CertStoreBearSSL.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -78,4 +79,5 @@ public:
     static String req(String topic, bool host = false);
     PubSubX(const char *pemCert) : PubSubWiFi(pemCert){};
     static String parse(byte *payload, unsigned int length);
+    static HTTPUpdateResult otaUpdate(const char *pemCert, String url);
 };
