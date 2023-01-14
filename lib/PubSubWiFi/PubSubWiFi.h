@@ -62,3 +62,20 @@ public:
     void onTimeout(std::function<void(void)> cb, u32_t time);
     PubSubWiFi(const char *pemCert) : _pemCert(pemCert){};
 };
+
+class PubSubX : public PubSubWiFi
+{
+    /* TOPIC FORMAT: `{SECRAT}/req|res/${service}/?{hostname}` */
+
+protected:
+    static String _pkey;
+
+public:
+    wlan_config_t init(String path);
+    static String parse(char *topic);
+    bool res(String topic, String payload);
+    bool sub(String topic, bool host = false);
+    static String req(String topic, bool host = false);
+    PubSubX(const char *pemCert) : PubSubWiFi(pemCert){};
+    static String parse(byte *payload, unsigned int length);
+};

@@ -151,3 +151,51 @@ void PubSubWiFi::onTimeout(std::function<void(void)> cb, u32_t time)
     _connTimeout = time;
     _onTimeout = cb;
 }
+
+/*******************************************************************/
+
+String PubSubX::_pkey;
+
+wlan_config_t PubSubX::init(String path)
+{
+    auto config = PubSubWiFi::init(path);
+    PubSubX::_pkey = config.identity;
+    return config;
+}
+
+bool PubSubX::res(String topic, String payload)
+{
+    auto tpk = PubSubX::_pkey + "/res/";
+    tpk += topic + "/" + WiFi.getHostname();
+    return publish(tpk.c_str(), payload.c_str());
+}
+
+bool PubSubX::sub(String topic, bool host)
+{
+    return subscribe(PubSubX::req(topic, host).c_str());
+}
+
+String PubSubX::req(String topic, bool host)
+{
+    auto tpk = PubSubX::_pkey + "/req/" + topic;
+    if (host)
+        tpk += String("/") + WiFi.getHostname();
+    return tpk;
+}
+
+String PubSubX::parse(char *topic)
+{
+    return String((topic + PubSubX::_pkey.length() + 5));
+}
+
+String PubSubX::parse(byte *payload, unsigned int length)
+{
+    if (length)
+    {
+        char data[length + 1];
+        data[length] = '\0';
+        strncpy(data, (char *)payload, length);
+        return String(data);
+    }
+    return String();
+}
