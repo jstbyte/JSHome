@@ -66,18 +66,19 @@ public:
 
 class PubSubX : public PubSubWiFi
 {
-    /* TOPIC FORMAT: `{SECRAT}/req|res/${service}/?{hostname}` */
+    /* TOPIC FORMAT: `{SECRAT}/{device}/${service}#` */
 
 protected:
     static String _pkey;
+    static String _host;
 
 public:
     wlan_config_t init(String path);
     static String parse(char *topic);
-    bool res(String topic, String payload);
-    bool sub(String topic, bool host = false);
-    static String req(String topic, bool host = false);
+    bool pub(String topic, String payload);
+    bool sub(String topic, bool parent = false);
     PubSubX(const char *pemCert) : PubSubWiFi(pemCert){};
+    static String topic(String topic, bool parent = false);
     static String parse(byte *payload, unsigned int length);
     static HTTPUpdateResult otaUpdate(const char *pemCert, String url);
 };

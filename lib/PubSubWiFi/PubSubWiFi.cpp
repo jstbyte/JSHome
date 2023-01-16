@@ -155,37 +155,38 @@ void PubSubWiFi::onTimeout(std::function<void(void)> cb, u32_t time)
 /*******************************************************************/
 
 String PubSubX::_pkey;
+String PubSubX::_host;
 
 wlan_config_t PubSubX::init(String path)
 {
     auto config = PubSubWiFi::init(path);
     PubSubX::_pkey = config.identity;
+    PubSubX::_host = config.hostNAME;
     return config;
 }
 
-bool PubSubX::res(String topic, String payload)
+bool PubSubX::pub(String topic, String payload)
 {
-    auto tpk = PubSubX::_pkey + "/res/";
-    tpk += topic + "/" + WiFi.getHostname();
-    return publish(tpk.c_str(), payload.c_str());
+    return publish(PubSubX::topic(topic).c_str(), payload.c_str());
 }
 
-bool PubSubX::sub(String topic, bool host)
+bool PubSubX::sub(String topic, bool parent)
 {
-    return subscribe(PubSubX::req(topic, host).c_str());
+    return subscribe(PubSubX::topic(topic, parent).c_str());
 }
 
-String PubSubX::req(String topic, bool host)
+String PubSubX::topic(String topic, bool parent)
 {
-    auto tpk = PubSubX::_pkey + "/req/" + topic;
-    if (host)
-        tpk += String("/") + WiFi.getHostname();
-    return tpk;
+    String tpk = PubSubX::_pkey + "/";
+    tpk += parent ? "$" : PubSubX::_host;
+    return topic.isEmpty() ? tpk : (tpk + "/" + topic);
 }
 
 String PubSubX::parse(char *topic)
 {
-    return String((topic + PubSubX::_pkey.length() + 5));
+    char *tpk = topic + PubSubX::_pkey.length() + 1;
+    tpk += (tpk[0] == '$') ? 1 : PubSubX::_host.length();
+    return (tpk[0] == '/') ? tpk + 1 : tpk;
 }
 
 String PubSubX::parse(byte *payload, unsigned int length)

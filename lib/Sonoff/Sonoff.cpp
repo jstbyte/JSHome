@@ -51,7 +51,7 @@ uint8_t Sonoff::read(uint8_t index)
     return digitalRead(Sonoff::_pnums[index]);
 }
 
-uint8_t Sonoff::write(uint8_t index, uint8_t state)
+uint8_t Sonoff::write(uint8_t index, uint8_t state, bool mask)
 {
     if (index < Sonoff::_count)
     {
@@ -59,12 +59,16 @@ uint8_t Sonoff::write(uint8_t index, uint8_t state)
         state = (state > 1) ? !currentState : 1;
         if (state == currentState)
             return false; /* No Pin Affected */
-        Sonoff::_cmask |= (1 << index);
         digitalWrite(Sonoff::_pnums[index], !currentState);
 
+        if (mask)
+        {
+            Sonoff::_cmask |= (1 << index);
 #ifdef ENABLE_SONOFF_EVENT
-        Sonoff::task.restartDelayed(Sonoff::delay);
+            Sonoff::task.restartDelayed(Sonoff::delay);
 #endif
+        }
+
         return true;
     }
 
@@ -123,9 +127,15 @@ uint8_t Sonoff::writes(String extrw)
     return hasChanged;
 }
 
-void Sonoff::reset()
+void Sonoff::reset(uint8_t index)
 {
-    Sonoff::_cmask = 0;
+    if (index != 255)
+    {
+        Sonoff::_cmask = 0;
+        return;
+    }
+
+    Sonoff::_cmask &= ~(1 << index);
 }
 
 uint8_t Sonoff::press(uint64_t value)
