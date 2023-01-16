@@ -56,7 +56,7 @@ uint8_t Sonoff::write(uint8_t index, uint8_t state, bool mask)
     if (index < Sonoff::_count)
     {
         bool currentState = digitalRead(Sonoff::_pnums[index]);
-        state = (state > 1) ? !currentState : 1;
+        state = (state > 1) ? !currentState : state;
         if (state == currentState)
             return false; /* No Pin Affected */
         digitalWrite(Sonoff::_pnums[index], !currentState);
