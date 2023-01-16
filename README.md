@@ -18,7 +18,7 @@ type DevInfo = {
 };
 
 /* ( CA Cert Embaded Into Program Memory in certs.h 'maybe change in future' ) */
-/* TOPIC FORMAT: `{SECRAT}/req|res/${service}/?{hostname}` */
+/* TOPIC FORMAT: `{SECRAT}/${DEVICE | *}/{req|res}/{SERVICES}#` */
 /* Sonoff:: Pin No. 13 Used By IR Reciver Sensor */
 
 const topics = [

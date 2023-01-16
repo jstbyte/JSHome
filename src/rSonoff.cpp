@@ -36,13 +36,13 @@ void blinkLed()
 void sonoffire()
 {
     uint8_t sonoffi = Sonoff::cmask() ? 255 : 128;
-    mqttClient.res("sonoff", Sonoff::reads(sonoffi).c_str());
+    mqttClient.pub("res/sonoff", Sonoff::reads(sonoffi));
     DEBUG_LOG_LN("MQTT: Invocked sonoffire.");
 }
 
 void mqttDevInfo(String topic, String data)
 {
-    if (topic.startsWith("devinfo"))
+    if (topic == "req/devinfo")
     {
         if (data == "sync")
             return sonoffire();
@@ -57,14 +57,14 @@ void mqttDevInfo(String topic, String data)
         services["data"] = Sonoff::count();
 
         serializeJson(doc, devInfoJsonDoc);
-        mqttClient.res("devinfo", devInfoJsonDoc.c_str());
+        mqttClient.pub("res/devinfo", devInfoJsonDoc.c_str());
         return;
     }
 
-    if (data && topic.startsWith("update"))
+    if (topic == "req/update")
     {
         if (data.isEmpty())
-            return (void)mqttClient.res("update", version);
+            return (void)mqttClient.pub("res/update", version);
 
         mqttClient.disconnect();
         PubSubX::otaUpdate(_firebaseRCA, data);
@@ -82,8 +82,8 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     DEBUG_LOG("` payload:: ")
     DEBUG_LOG_LN(data);
 
-    if (topic.startsWith("sonoff"))
-        return (void)Sonoff::writes((char *)data.c_str());
+    if (topic == "req/sonoff")
+        return (void)Sonoff::writes(data);
 
     mqttDevInfo(topic, data); /* System Info & Update */
 }
@@ -92,11 +92,10 @@ void onConnection(PubSubWiFi *client)
 {
     if (client->connected())
     {
-        ((PubSubX *)client)->sub("devinfo", true);
-        ((PubSubX *)client)->sub("sonoff", true);
-        ((PubSubX *)client)->sub("update", true);
-        ((PubSubX *)client)->sub("devinfo");
-        ((PubSubX *)client)->sub("update");
+        ((PubSubX *)client)->sub("req/devinfo", true);
+        ((PubSubX *)client)->sub("req/devinfo");
+        ((PubSubX *)client)->sub("req/update");
+        ((PubSubX *)client)->sub("req/sonoff");
         DEBUG_LOG_LN("MQTT: Subscribed.");
         analogWrite(LED_BUILTIN, 254);
         ledTask.disable();
