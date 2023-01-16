@@ -178,14 +178,14 @@ bool PubSubX::sub(String topic, bool parent)
 String PubSubX::topic(String topic, bool parent)
 {
     String tpk = PubSubX::_pkey + "/";
-    tpk += parent ? "$" : PubSubX::_host;
+    tpk += parent ? "*" : PubSubX::_host;
     return topic.isEmpty() ? tpk : (tpk + "/" + topic);
 }
 
 String PubSubX::parse(char *topic)
 {
     char *tpk = topic + PubSubX::_pkey.length() + 1;
-    tpk += (tpk[0] == '$') ? 1 : PubSubX::_host.length();
+    tpk += (tpk[0] == '*') ? 1 : PubSubX::_host.length();
     return (tpk[0] == '/') ? tpk + 1 : tpk;
 }
 

@@ -66,7 +66,8 @@ public:
 
 class PubSubX : public PubSubWiFi
 {
-    /* TOPIC FORMAT: `{SECRAT}/{device}/${service}#` */
+    /* TOPIC FORMAT: `{SECRAT}/{DEVICE}/{SERVICES}#` */
+    /* DEVICE `*` Mean Any Device Under The Same Key */
 
 protected:
     static String _pkey;
