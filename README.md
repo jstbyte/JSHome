@@ -1,7 +1,6 @@
 # Instructions!
 
 ```ts
-
 /* data/config.json  */ {
   "identity": "secrat.domain.ext",
   "wlanSSID": "ssid@sta",
@@ -10,23 +9,14 @@
   "mqttHOST": "broker.emqx.io",
   "mqttPORT": 8883
 }
-
-type DevInfo = {
-  mac: string;
-  name: string;
-  services: { name: string; data: any }[];
-};
-
 /* ( CA Cert Embaded Into Program Memory in certs.h 'maybe change in future' ) */
 /* TOPIC FORMAT: `{SECRAT}/${DEVICE | *}/{req|res}/{SERVICES}#` */
 /* Sonoff:: Pin No. 13 Used By IR Reciver Sensor */
 
-const topics = [
-  {topic: 'devinfo', payload: `?sync`},
+const topics = [ // Regex Inside [...];
   {topic: 'update', payload: `?{URL}`},
-  {topic: 'sonoff' , payload: `[index]:[state];...`}
+  {topic: 'sonoff', payload: `[index]:[state];...`}
 ]
 
 // TODO: Future:: https://api.github.com/repos/jstbyte/Jiot/releases/latest;
-
 ```

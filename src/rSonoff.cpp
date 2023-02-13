@@ -18,7 +18,7 @@
 #include "spac.h"
 #define D7 13
 
-const char version[] = "v3.0.1";
+const char version[] = "v3.1.0";
 PubSubX mqttClient(_emqxRCA);
 decode_results ir_result;
 Scheduler scheduler;
@@ -40,25 +40,21 @@ void sonoffire()
     DEBUG_LOG_LN("MQTT: Invocked sonoffire.");
 }
 
-void mqttDevInfo(String topic, String data)
+void mqttCallback(char *tpk, byte *dta, uint32_t length)
 {
-    if (topic == "req/devinfo")
+    auto topic = PubSubX::parse(tpk);
+    auto data = PubSubX::parse(dta, length);
+
+    DEBUG_LOG("MQTT: topic recived : `");
+    DEBUG_LOG(topic);
+    DEBUG_LOG("` payload:: ")
+    DEBUG_LOG_LN(data);
+
+    if (topic == "req/sonoff")
     {
-        if (data == "sync")
+        if (data.isEmpty())
             return sonoffire();
-
-        String devInfoJsonDoc;
-        StaticJsonDocument<256> doc;
-        doc["mac"] = WiFi.macAddress();
-        doc["name"] = WiFi.getHostname();
-
-        JsonObject services = doc["services"].createNestedObject();
-        services["name"] = "sonoff";
-        services["data"] = Sonoff::count();
-
-        serializeJson(doc, devInfoJsonDoc);
-        mqttClient.pub("res/devinfo", devInfoJsonDoc.c_str());
-        return;
+        return (void)Sonoff::writes(data);
     }
 
     if (topic == "req/update")
@@ -72,28 +68,10 @@ void mqttDevInfo(String topic, String data)
     }
 }
 
-void mqttCallback(char *tpk, byte *dta, uint32_t length)
-{
-    auto topic = PubSubX::parse(tpk);
-    auto data = PubSubX::parse(dta, length);
-
-    DEBUG_LOG("MQTT: topic recived : `");
-    DEBUG_LOG(topic);
-    DEBUG_LOG("` payload:: ")
-    DEBUG_LOG_LN(data);
-
-    if (topic == "req/sonoff")
-        return (void)Sonoff::writes(data);
-
-    mqttDevInfo(topic, data); /* System Info & Update */
-}
-
 void onConnection(PubSubWiFi *client)
 {
     if (client->connected())
     {
-        ((PubSubX *)client)->sub("req/devinfo", true);
-        ((PubSubX *)client)->sub("req/devinfo");
         ((PubSubX *)client)->sub("req/update");
         ((PubSubX *)client)->sub("req/sonoff");
         DEBUG_LOG_LN("MQTT: Subscribed.");
