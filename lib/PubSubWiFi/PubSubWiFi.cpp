@@ -31,53 +31,45 @@ void BootMan::reboot(uint32_t timeout, void *data, uint8_t len)
 
 void PubSubWiFi::eventLoop()
 {
-    if (loop())
+    if (!loop())
     {
-        return;
-    }
-
-    if (WiFi.isConnected())
-    {
-        configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-        if (connect(uuid("ESP8266JST-").c_str()))
+        if (_timestamp < 2)
         {
-            DEBUG_LOG_LN("MQTT: connected.");
-            if (_onConnection)
+            DEBUG_LOG_LN("MQTT: Disconnected.");
+            if (_timestamp == 1 && _onConnection)
                 _onConnection(this);
-            _timestamp = 1;
+            _timestamp = millis();
             return;
         }
-    }
 
-    if (_timestamp < 2)
-    {
-        if (_timestamp == 1)
+        if ((u32_t)(millis() - _timestamp) > MQTT_RETRY_MS)
         {
-            DEBUG_LOG_LN("MQTT: disonnected!");
-            if (_onConnection)
-                _onConnection(this);
-        }
-        _timestamp = millis();
-        return;
-    }
+            if (WiFi.isConnected())
+            {
+                DEBUG_LOG("MQTT: {");
+                DEBUG_LOG(_retryCount);
+                DEBUG_LOG_LN("} Connecting...");
+                configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+                if (connect(uuid("ESP8266JST-").c_str()))
+                {
+                    DEBUG_LOG_LN("MQTT: Connected.");
+                    if (_onConnection)
+                        _onConnection(this);
+                    _retryCount = 0;
+                    _timestamp = 1;
+                    return;
+                }
+            }
 
-    if (_connTimeout)
-    {
-        if (((u32_t)(millis() - _timestamp) > _connTimeout))
-        {
-            DEBUG_LOG_LN("MQTT: conn. timeout!");
-            _connTimeout = 0;
-            if (_onTimeout)
-                _onTimeout();
-            return;
+            _retryCount++;
+            _timestamp = millis();
+            if (_retryCount == _maxRetry && _retryCount > 0)
+            {
+                DEBUG_LOG_LN("MQTT: Maximum Retry Exceeds.");
+                _onRertyExceeds();
+            }
         }
     }
-}
-
-void PubSubWiFi::resetTimeout(u32_t time)
-{
-    if (_onConnection)
-        _connTimeout = time;
 }
 
 wlan_config_t PubSubWiFi::init(String path)
@@ -112,8 +104,9 @@ void PubSubWiFi::init(wlan_config_t *config)
         _wifiClient = new WiFiClient();
     }
 
+    _maxRetry = 0;
     _timestamp = 0;
-    _connTimeout = 0;
+    _retryCount = 0;
     setClient(*_wifiClient);
     setServer(mqttHost, config->mqttPORT);
 }
@@ -146,10 +139,10 @@ void PubSubWiFi::onConnection(std::function<void(PubSubWiFi *)> cb)
     _onConnection = cb;
 }
 
-void PubSubWiFi::onTimeout(std::function<void(void)> cb, u32_t time)
+void PubSubWiFi::onRertyExceeds(std::function<void(void)> cb, u8_t maxRetry)
 {
-    _connTimeout = time;
-    _onTimeout = cb;
+    _maxRetry = maxRetry;
+    _onRertyExceeds = cb;
 }
 
 /*******************************************************************/

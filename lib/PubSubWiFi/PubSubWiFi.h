@@ -14,6 +14,9 @@
 #ifndef RTC_DATA_SIZE
 #define RTC_DATA_SIZE 8
 #endif
+#ifndef MQTT_RETRY_MS
+#define MQTT_RETRY_MS 5000
+#endif
 
 typedef struct
 {
@@ -46,22 +49,22 @@ public:
 class PubSubWiFi : public PubSubClient
 {
 protected:
-    u32_t _connTimeout;
+    u8_t _maxRetry;
+    u8_t _retryCount;
     const char *_pemCert;
     WiFiClient *_wifiClient;
     unsigned long long _timestamp;
-    std::function<void(void)> _onTimeout;
+    std::function<void(void)> _onRertyExceeds;
     std::function<void(PubSubWiFi *)> _onConnection;
 
 public:
     void eventLoop();
-    void resetTimeout(u32_t time);
     wlan_config_t init(String path);
     void init(wlan_config_t *config);
     static wlan_config_t loadWlanConfig(String path);
-    void onConnection(std::function<void(PubSubWiFi *)> cb);
-    void onTimeout(std::function<void(void)> cb, u32_t time);
     PubSubWiFi(const char *pemCert) : _pemCert(pemCert){};
+    void onConnection(std::function<void(PubSubWiFi *)> cb);
+    void onRertyExceeds(std::function<void(void)> cb, u8_t maxRetry);
 };
 
 class PubSubX : public PubSubWiFi
