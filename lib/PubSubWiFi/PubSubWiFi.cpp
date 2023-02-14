@@ -194,6 +194,18 @@ String PubSubX::parse(byte *payload, unsigned int length)
     return String();
 }
 
+HTTPUpdateResult PubSubX::otaUpdate(const char *pemCert, String url, String ver)
+{
+    if (url.isEmpty())
+    {
+        pub("res/update", ver);
+        return HTTP_UPDATE_FAILED;
+    }
+
+    disconnect();
+    return PubSubX::otaUpdate(pemCert, url);
+}
+
 HTTPUpdateResult PubSubX::otaUpdate(const char *pemCert, String url)
 {
     BearSSL::WiFiClientSecure client;

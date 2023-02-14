@@ -85,4 +85,5 @@ public:
     static String topic(String topic, bool parent = false);
     static String parse(byte *payload, unsigned int length);
     static HTTPUpdateResult otaUpdate(const char *pemCert, String url);
+    HTTPUpdateResult otaUpdate(const char *pemCert, String url, String ver);
 };

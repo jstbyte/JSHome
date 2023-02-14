@@ -114,6 +114,14 @@ String Sonoff::reads(uint8_t index)
 
 uint8_t Sonoff::writes(String extrw)
 {
+#ifdef ENABLE_SONOFF_EVENT
+    if (extrw.isEmpty())
+    {
+        Sonoff::task.restart();
+        return false;
+    }
+#endif
+
     char *token = strtok((char *)extrw.c_str(), ";");
     bool hasChanged = false;
     while (token != NULL)

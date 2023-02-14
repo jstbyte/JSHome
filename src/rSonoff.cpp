@@ -51,21 +51,10 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     DEBUG_LOG_LN(data);
 
     if (topic == "req/sonoff")
-    {
-        if (data.isEmpty())
-            return sonoffire();
         return (void)Sonoff::writes(data);
-    }
 
     if (topic == "req/update")
-    {
-        if (data.isEmpty())
-            return (void)mqttClient.pub("res/update", version);
-
-        mqttClient.disconnect();
-        PubSubX::otaUpdate(_firebaseRCA, data);
-        return;
-    }
+        return (void)mqttClient.otaUpdate(_firebaseRCA, data, version);
 }
 
 void onConnection(PubSubWiFi *client)
