@@ -16,13 +16,13 @@
 #include "certs.h"
 #include <time.h>
 #include "spac.h"
-#define D7 13
+#define IR 13
 
 const char version[] = "v3.1.0";
 PubSubX mqttClient(_emqxRCA);
 decode_results ir_result;
 Scheduler scheduler;
-IRrecv irrecv(D7);
+IRrecv irrecv(IR);
 Task ledTask;
 
 void blinkLed()
@@ -60,18 +60,17 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
 
 void onConnection(PubSubWiFi *client)
 {
-    if (client->connected())
-    {
-        ((PubSubX *)client)->sub("req/update");
-        ((PubSubX *)client)->sub("req/sonoff");
-        DEBUG_LOG_LN("MQTT: Subscribed.");
-        analogWrite(LED_BUILTIN, 254);
-        ledTask.disable();
-        sonoffire();
-        return;
-    }
+    if (!client->connected())
+        return (void)ledTask.enable();
 
-    ledTask.enable();
+    if (Snf::enabled())
+        ((PubSubX *)client)->sub("req/sonoff");
+    ((PubSubX *)client)->sub("req/update");
+    DEBUG_LOG_LN("MQTT: Subscribed.");
+    analogWrite(LED_BUILTIN, 254);
+    ledTask.disable();
+    sonoffire();
+    return;
 }
 
 void setup()
@@ -89,9 +88,14 @@ void setup()
     mqttClient.onConnection(onConnection);
     mqttClient.setCallback(mqttCallback);
 
-    Snf &sonoff = Snf::Get();
-    sonoff.begin("/sonoff.txt");
-    sonoff.taskSetup(scheduler, &sonoffire, 1000, true);
+    if (LittleFS.exists("/sonoff.txt"))
+    {
+        Snf &sonoff = Snf::Get();
+        sonoff.begin("/sonoff.txt");
+        DEBUG_LOG_LN("SONOFF: pins found.");
+        sonoff.taskSetup(scheduler, &sonoffire, 1000, true);
+    }
+
     DEBUG_LOG_LN("(((Device Setup Completed)))");
 }
 
@@ -99,7 +103,8 @@ void loop()
 {
     if (irrecv.decode(&ir_result))
     {
-        (Snf::Get()).press(ir_result.value);
+        if (Snf::enabled())
+            (Snf::Get()).press(ir_result.value);
         DEBUG_LOG("INFARED RECIVED : ");
         DEBUG_LOG_LN(ir_result.value);
         irrecv.resume();
