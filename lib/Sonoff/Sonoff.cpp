@@ -1,22 +1,32 @@
 #include "Sonoff.h"
 
-uint8_t Sonoff::_pnums[8];
-uint8_t Sonoff::_count = 0;
-uint8_t Sonoff::_cmask = 0;
+bool Snf::_enabled = false;
+
+Snf &Snf::Get()
+{
+    static Snf instance;
+    _enabled = true;
+    return instance;
+}
+
+bool Snf::enabled()
+{
+    return _enabled;
+}
 
 uint8_t Sonoff::count() // Geter
 {
-    return Sonoff::_count;
+    return _count;
 }
 
 uint8_t Sonoff::cmask() // Geter
 {
-    return Sonoff::_cmask;
+    return _cmask;
 }
 
 uint8_t *Sonoff::pins() // Geter
 {
-    return Sonoff::_pnums;
+    return _pnums;
 }
 
 uint8_t Sonoff::begin(String path)
@@ -34,38 +44,37 @@ uint8_t Sonoff::begin(String path)
         {
             pinMode(pin, OUTPUT);
             digitalWrite(pin, state);
-            Sonoff::_pnums[Sonoff::_count] = pin;
-            Sonoff::_count++;
+            _pnums[_count] = pin;
+            _count++;
         }
     }
 
     file.close();
-    return Sonoff::_count;
+    return _count;
 };
 
 uint8_t Sonoff::read(uint8_t index)
 {
-    if (index >= Sonoff::_count)
+    if (index >= _count)
         return 0;
-
-    return digitalRead(Sonoff::_pnums[index]);
+    return digitalRead(_pnums[index]);
 }
 
 uint8_t Sonoff::write(uint8_t index, uint8_t state, bool mask)
 {
-    if (index < Sonoff::_count)
+    if (index < _count)
     {
-        bool currentState = digitalRead(Sonoff::_pnums[index]);
+        bool currentState = digitalRead(_pnums[index]);
         state = (state > 1) ? !currentState : state;
         if (state == currentState)
             return false; /* No Pin Affected */
-        digitalWrite(Sonoff::_pnums[index], !currentState);
+        digitalWrite(_pnums[index], !currentState);
 
         if (mask)
         {
-            Sonoff::_cmask |= (1 << index);
+            _cmask |= (1 << index);
 #ifdef ENABLE_SONOFF_EVENT
-            Sonoff::task.restartDelayed(Sonoff::delay);
+            _task.restartDelayed(_delay);
 #endif
         }
 
@@ -73,9 +82,9 @@ uint8_t Sonoff::write(uint8_t index, uint8_t state, bool mask)
     }
 
     bool hasChanged = false;
-    for (uint8_t i = 0; i < Sonoff::_count; i++)
+    for (uint8_t i = 0; i < _count; i++)
     {
-        hasChanged = Sonoff::write(i, state) || hasChanged;
+        hasChanged = write(i, state) || hasChanged;
     }
 
     return hasChanged;
@@ -83,10 +92,10 @@ uint8_t Sonoff::write(uint8_t index, uint8_t state, bool mask)
 
 String Sonoff::reads(uint8_t index)
 {
-    if (index < Sonoff::_count)
+    if (index < _count)
     {
         char csd[8];
-        sprintf(csd, "%hu:%hu", index, Sonoff::read(index));
+        sprintf(csd, "%hu:%hu", index, read(index));
         return String(csd);
     }
 
@@ -94,18 +103,18 @@ String Sonoff::reads(uint8_t index)
 
     if (index == 255)
     {
-        for (uint8_t i = 0; i < Sonoff::_count; i++)
-            if (Sonoff::_cmask & (1 << i))
-                result += Sonoff::reads(i) + ";";
+        for (uint8_t i = 0; i < _count; i++)
+            if (_cmask & (1 << i))
+                result += reads(i) + ";";
 
         result.remove(result.length() - 1);
-        Sonoff::_cmask = 0;
+        _cmask = 0;
         return result;
     }
 
-    for (uint8_t i = 0; i < Sonoff::_count; i++)
+    for (uint8_t i = 0; i < _count; i++)
     {
-        result += Sonoff::reads(i) + ";";
+        result += reads(i) + ";";
     }
 
     result.remove(result.length() - 1);
@@ -114,13 +123,13 @@ String Sonoff::reads(uint8_t index)
 
 uint8_t Sonoff::writes(String extrw)
 {
-#ifdef ENABLE_SONOFF_EVENT
     if (extrw.isEmpty())
     {
-        Sonoff::task.restart();
+#ifdef ENABLE_SONOFF_EVENT
+        _task.restart();
+#endif
         return false;
     }
-#endif
 
     char *token = strtok((char *)extrw.c_str(), ";");
     bool hasChanged = false;
@@ -129,7 +138,7 @@ uint8_t Sonoff::writes(String extrw)
         unsigned short index = 255;
         unsigned short state = 255;
         sscanf(token, "%hu:%hu", &index, &state);
-        hasChanged = Sonoff::write(index, state) || hasChanged;
+        hasChanged = write(index, state) || hasChanged;
         token = strtok(NULL, ";");
     }
     return hasChanged;
@@ -139,7 +148,7 @@ void Sonoff::reset(uint8_t index)
 {
     if (index != 255)
     {
-        Sonoff::_cmask = 0;
+        _cmask = 0;
         return;
     }
 
@@ -152,25 +161,25 @@ uint8_t Sonoff::press(uint64_t value)
     switch (value)
     {
     case IR_POWER:
-        hasChanged = Sonoff::write(128, HIGH);
+        hasChanged = write(128, HIGH);
         break;
     case IR_MUTE:
-        hasChanged = Sonoff::write(128, LOW);
+        hasChanged = write(128, LOW);
         break;
     case IR_MODE:
-        hasChanged = Sonoff::write(128);
+        hasChanged = write(128);
         break;
     case IR_1:
-        hasChanged = Sonoff::write(0);
+        hasChanged = write(0);
         break;
     case IR_2:
-        hasChanged = Sonoff::write(1);
+        hasChanged = write(1);
         break;
     case IR_3:
-        hasChanged = Sonoff::write(2);
+        hasChanged = write(2);
         break;
     case IR_4:
-        hasChanged = Sonoff::write(3);
+        hasChanged = write(3);
         break;
     default:
         return false;
@@ -179,16 +188,14 @@ uint8_t Sonoff::press(uint64_t value)
 }
 
 #ifdef ENABLE_SONOFF_EVENT
-Task Sonoff::task;
-uint32_t Sonoff::delay = 0;
 
 void Sonoff::taskSetup(Scheduler &ts, TaskCallback cb, uint32_t delay, bool check)
 {
-    if (check && !Sonoff::_count)
+    if (check && !_count)
         return;
 
-    Sonoff::task.set(0, 1, cb);
-    ts.addTask(Sonoff::task);
-    Sonoff::delay = delay;
+    _task.set(0, 1, cb);
+    ts.addTask(_task);
+    _delay = delay;
 }
 #endif

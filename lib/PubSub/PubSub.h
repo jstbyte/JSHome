@@ -8,22 +8,11 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
-#include <RTCMemory.h>
 #include <Helper.h>
 #include <time.h>
-#ifndef RTC_DATA_SIZE
-#define RTC_DATA_SIZE 8
-#endif
 #ifndef MQTT_RETRY_MS
 #define MQTT_RETRY_MS 5000
 #endif
-
-typedef struct
-{
-    uint8_t bootCount;
-    uint32_t timeout;
-    uint8_t data[7];
-} RTCData;
 
 typedef struct
 {
@@ -34,17 +23,6 @@ typedef struct
     String mqttHOST;
     u32_t mqttPORT;
 } wlan_config_t;
-
-class BootMan
-{
-protected:
-    static RTCMemory<RTCData> rtcData;
-
-public:
-    static RTCData *data();
-    static bool recover(void *data = nullptr, uint8_t len = 0);
-    static void reboot(uint32_t timeout, void *data = nullptr, uint8_t len = 0);
-};
 
 class PubSubWiFi : public PubSubClient
 {

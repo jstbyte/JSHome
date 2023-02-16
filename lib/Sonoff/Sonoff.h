@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 #include "Helper.h"
+#define MASK mask = true
 #define ENABLE_SONOFF_EVENT
 #ifdef ENABLE_SONOFF_EVENT // Check;
 #include <TaskSchedulerDeclarations.h>
@@ -19,27 +20,44 @@
 class Sonoff
 { /* Enable Event  :  ENABLE_SONOFF_EVENT */
 protected:
-    static uint8_t _count;    // Pin Counter;
-    static uint8_t _cmask;    // Changed Msk;
-    static uint8_t _pnums[8]; // Pin Numbers;
+    uint8_t _count;    // Pin Counter;
+    uint8_t _cmask;    // Changed Msk;
+    uint8_t _pnums[8]; // Pin Numbers;
 
-#define SNOF_WRITE_ARG uint8_t index, uint8_t state = 3, bool mask = true
+#define SNOF_WRITE_ARG uint8_t index, uint8_t state = 3, bool MASK
 public:
-    static uint8_t count();                   // Get available pins count;
-    static uint8_t cmask();                   // Get  changed masked byte;
-    static uint8_t *pins();                   // Get IO pin numbers array;
-    static uint8_t begin(String path);        // Load & Init Pins from FS;
-    static uint8_t read(uint8_t index);       // Read pin state  by index;
-    static uint8_t write(SNOF_WRITE_ARG);     // Write Pin State By Index;
-    static String reads(uint8_t index = 128); // Retrun Externl RW String;
-    static uint8_t writes(String extrw);      // External RW  From String;
-    static uint8_t press(uint64_t value);     // IR remote  key interface;
-    static void reset(uint8_t index = 255);   // Reset  pins changed mask;
+    uint8_t count();                   // Get available pins count;
+    uint8_t cmask();                   // Get  changed masked byte;
+    uint8_t *pins();                   // Get IO pin numbers array;
+    uint8_t begin(String path);        // Load & Init Pins from FS;
+    uint8_t read(uint8_t index);       // Read pin state  by index;
+    uint8_t write(SNOF_WRITE_ARG);     // Write Pin State By Index;
+    String reads(uint8_t index = 128); // Retrun Externl RW String;
+    uint8_t writes(String extrw);      // External RW  From String;
+    uint8_t press(uint64_t value);     // IR remote  key interface;
+    void reset(uint8_t index = 255);   // Reset  pins changed mask;
+    Sonoff() : _count(0), _cmask(0){}; // Default constructer call;
 
 #ifdef ENABLE_SONOFF_EVENT
-    static Task task;
-    static uint32_t delay;
-    static void taskSetup(Scheduler &ts, TaskCallback cb,
-                          uint32_t delay, bool check = false);
+    Task _task;
+    uint32_t _delay;
+    void taskSetup(Scheduler &ts, TaskCallback cb,
+                   uint32_t delay, bool check = false);
 #endif
+};
+
+class Snf : public Sonoff
+{
+public:
+    static Snf &Get();
+    static bool enabled();
+
+protected:
+    static bool _enabled;
+
+private:
+    ~Snf(){};
+    Snf() : Sonoff(){};
+    Snf(const Snf &) = delete;
+    Snf &operator=(const Snf &) = delete;
 };
