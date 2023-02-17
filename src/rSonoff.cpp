@@ -18,8 +18,8 @@
 #include "spac.h"
 #define IR 13
 
+PubSubX &mqttClient = PubSubX::Get();
 const char version[] = "v3.1.0";
-PubSubX mqttClient(_emqxRCA);
 decode_results ir_result;
 Scheduler scheduler;
 IRrecv irrecv(IR);
@@ -38,35 +38,28 @@ void sonoffire()
     Snf &sonoff = Snf::Get();
     uint8_t sonoffi = sonoff.cmask() ? 255 : 128;
     mqttClient.pub("res/sonoff", sonoff.reads(sonoffi));
-    DEBUG_LOG_LN("MQTT: Invocked sonoffire.");
 }
 
 void mqttCallback(char *tpk, byte *dta, uint32_t length)
 {
-    auto topic = PubSubX::parse(tpk);
-    auto data = PubSubX::parse(dta, length);
-
-    DEBUG_LOG("MQTT: topic recived : `");
-    DEBUG_LOG(topic);
-    DEBUG_LOG("` payload:: ")
-    DEBUG_LOG_LN(data);
+    auto topic = mqttClient.parse(tpk);
+    auto data = mqttClient.parse(dta, length);
 
     if (topic == "req/sonoff")
         return (void)(Snf::Get()).writes(data);
 
     if (topic == "req/update")
-        return (void)mqttClient.otaUpdate(_firebaseRCA, data, version);
+        return (void)mqttClient.update(_firebaseRCA, data, version);
 }
 
-void onConnection(PubSubWiFi *client)
+void onConnection(PubSubWiFi *)
 {
-    if (!client->connected())
+    if (!mqttClient.connected())
         return (void)ledTask.enable();
 
     if (Snf::enabled())
-        ((PubSubX *)client)->sub("req/sonoff");
-    ((PubSubX *)client)->sub("req/update");
-    DEBUG_LOG_LN("MQTT: Subscribed.");
+        mqttClient.sub("req/sonoff");
+    mqttClient.sub("req/update");
     analogWrite(LED_BUILTIN, 254);
     ledTask.disable();
     sonoffire();
@@ -84,9 +77,10 @@ void setup()
     scheduler.addTask(ledTask);
     ledTask.enable();
 
-    auto config = mqttClient.init("/config.json");
-    mqttClient.onConnection(onConnection);
-    mqttClient.setCallback(mqttCallback);
+    PubSubX &client = PubSubX::Get();
+    client.setCallback(mqttCallback);
+    client.onConnection(onConnection);
+    client.init("/config.json", _emqxRCA);
 
     if (LittleFS.exists("/sonoff.txt"))
     {
@@ -95,8 +89,6 @@ void setup()
         DEBUG_LOG_LN("SONOFF: pins found.");
         sonoff.taskSetup(scheduler, &sonoffire, 1000, true);
     }
-
-    DEBUG_LOG_LN("(((Device Setup Completed)))");
 }
 
 void loop()
@@ -105,8 +97,6 @@ void loop()
     {
         if (Snf::enabled())
             (Snf::Get()).press(ir_result.value);
-        DEBUG_LOG("INFARED RECIVED : ");
-        DEBUG_LOG_LN(ir_result.value);
         irrecv.resume();
     }
 

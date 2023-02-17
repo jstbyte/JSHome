@@ -26,10 +26,13 @@ typedef struct
 
 class PubSubWiFi : public PubSubClient
 {
+    /* TOPIC FORMAT: `{SECRAT}/{DEVICE}/{SERVICES}#` */
+    /* DEVICE `*` Mean Any Device Under The Same Key */
+
 protected:
+    String _pkey;
     u8_t _maxRetry;
     u8_t _retryCount;
-    const char *_pemCert;
     WiFiClient *_wifiClient;
     unsigned long long _timestamp;
     std::function<void(void)> _onRertyExceeds;
@@ -37,31 +40,30 @@ protected:
 
 public:
     void eventLoop();
-    wlan_config_t init(String path);
-    void init(wlan_config_t *config);
     static wlan_config_t loadWlanConfig(String path);
-    PubSubWiFi(const char *pemCert) : _pemCert(pemCert){};
+    wlan_config_t init(String path, const char *pemCert);
+    void init(wlan_config_t *config, const char *pemCert);
     void onConnection(std::function<void(PubSubWiFi *)> cb);
+    // PubSubWiFi(const char *pemCert) : _pemCert(pemCert){};
     void onRertyExceeds(std::function<void(void)> cb, u8_t maxRetry);
+
+public:
+    String parse(char *_topic);
+    bool pub(String _topic, String payload);
+    bool sub(String _topic, bool parent = false);
+    String topic(String _topic, bool parent = false);
+    String parse(byte *payload, unsigned int length);
 };
 
 class PubSubX : public PubSubWiFi
-{
-    /* TOPIC FORMAT: `{SECRAT}/{DEVICE}/{SERVICES}#` */
-    /* DEVICE `*` Mean Any Device Under The Same Key */
-
-protected:
-    static String _pkey;
-    static String _host;
+{ /* Static Class : PubSubWiFi */
+private:
+    ~PubSubX(){};
+    PubSubX() : PubSubWiFi(){};
+    PubSubX(const PubSubX &) = delete;
+    PubSubX &operator=(const PubSubX &) = delete;
 
 public:
-    wlan_config_t init(String path);
-    static String parse(char *topic);
-    bool pub(String topic, String payload);
-    bool sub(String topic, bool parent = false);
-    PubSubX(const char *pemCert) : PubSubWiFi(pemCert){};
-    static String topic(String topic, bool parent = false);
-    static String parse(byte *payload, unsigned int length);
-    static HTTPUpdateResult otaUpdate(const char *pemCert, String url);
-    HTTPUpdateResult otaUpdate(const char *pemCert, String url, String ver);
+    static PubSubX &Get();
+    HTTPUpdateResult update(const char *pemCert, String url, String ver);
 };

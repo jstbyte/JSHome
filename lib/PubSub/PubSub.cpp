@@ -1,5 +1,11 @@
 #include "PubSub.h"
 
+PubSubX &PubSubX::Get()
+{
+    static PubSubX instance;
+    return instance;
+}
+
 void PubSubWiFi::eventLoop()
 {
     if (!loop())
@@ -43,14 +49,14 @@ void PubSubWiFi::eventLoop()
     }
 }
 
-wlan_config_t PubSubWiFi::init(String path)
+wlan_config_t PubSubWiFi::init(String path, const char *pemCert)
 {
     auto config = PubSubWiFi::loadWlanConfig(path);
-    init(&config);
+    init(&config, pemCert);
     return config;
 }
 
-void PubSubWiFi::init(wlan_config_t *config)
+void PubSubWiFi::init(wlan_config_t *config, const char *pemCert)
 {
     WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
@@ -65,8 +71,8 @@ void PubSubWiFi::init(wlan_config_t *config)
     if (config->mqttPORT == 8883)
     {
         DEBUG_LOG_LN("::Secure.");
+        auto caCert = new BearSSL::X509List(pemCert);
         _wifiClient = new BearSSL::WiFiClientSecure();
-        auto caCert = new BearSSL::X509List(_pemCert);
         ((WiFiClientSecure *)_wifiClient)->setTrustAnchors(caCert);
     }
     else
@@ -79,6 +85,7 @@ void PubSubWiFi::init(wlan_config_t *config)
     _timestamp = 0;
     _retryCount = 0;
     setClient(*_wifiClient);
+    _pkey = config->identity;
     setServer(mqttHost, config->mqttPORT);
 }
 
@@ -116,44 +123,31 @@ void PubSubWiFi::onRertyExceeds(std::function<void(void)> cb, u8_t maxRetry)
     _onRertyExceeds = cb;
 }
 
-/*******************************************************************/
-
-String PubSubX::_pkey;
-String PubSubX::_host;
-
-wlan_config_t PubSubX::init(String path)
+bool PubSubWiFi::pub(String _topic, String payload)
 {
-    auto config = PubSubWiFi::init(path);
-    PubSubX::_pkey = config.identity;
-    PubSubX::_host = config.hostNAME;
-    return config;
+    return publish(topic(_topic).c_str(), payload.c_str());
 }
 
-bool PubSubX::pub(String topic, String payload)
+bool PubSubWiFi::sub(String _topic, bool parent)
 {
-    return publish(PubSubX::topic(topic).c_str(), payload.c_str());
+    return subscribe(topic(_topic, parent).c_str());
 }
 
-bool PubSubX::sub(String topic, bool parent)
+String PubSubWiFi::topic(String _topic, bool parent)
 {
-    return subscribe(PubSubX::topic(topic, parent).c_str());
+    String tpk = _pkey + "/";
+    tpk += parent ? "*" : String(WiFi.getHostname());
+    return _topic.isEmpty() ? tpk : (tpk + "/" + _topic);
 }
 
-String PubSubX::topic(String topic, bool parent)
+String PubSubWiFi::parse(char *_topic)
 {
-    String tpk = PubSubX::_pkey + "/";
-    tpk += parent ? "*" : PubSubX::_host;
-    return topic.isEmpty() ? tpk : (tpk + "/" + topic);
-}
-
-String PubSubX::parse(char *topic)
-{
-    char *tpk = topic + PubSubX::_pkey.length() + 1;
-    tpk += (tpk[0] == '*') ? 1 : PubSubX::_host.length();
+    char *tpk = _topic + _pkey.length() + 1;
+    tpk += (tpk[0] == '*') ? 1 : String(WiFi.getHostname()).length();
     return (tpk[0] == '/') ? tpk + 1 : tpk;
 }
 
-String PubSubX::parse(byte *payload, unsigned int length)
+String PubSubWiFi::parse(byte *payload, unsigned int length)
 {
     if (length)
     {
@@ -165,7 +159,9 @@ String PubSubX::parse(byte *payload, unsigned int length)
     return String();
 }
 
-HTTPUpdateResult PubSubX::otaUpdate(const char *pemCert, String url, String ver)
+/**************************************************************************/
+
+HTTPUpdateResult PubSubX::update(const char *pemCert, String url, String ver)
 {
     if (url.isEmpty())
     {
@@ -173,12 +169,8 @@ HTTPUpdateResult PubSubX::otaUpdate(const char *pemCert, String url, String ver)
         return HTTP_UPDATE_FAILED;
     }
 
-    disconnect();
-    return PubSubX::otaUpdate(pemCert, url);
-}
+    this->disconnect();
 
-HTTPUpdateResult PubSubX::otaUpdate(const char *pemCert, String url)
-{
     BearSSL::WiFiClientSecure client;
     BearSSL::X509List x509(pemCert);
     client.setTrustAnchors(&x509);
