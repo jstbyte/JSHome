@@ -1,4 +1,5 @@
 #include "Sonoff.h"
+#include <PubSub.h>
 
 bool Snf::_enabled = false;
 
@@ -7,6 +8,14 @@ Snf &Snf::Get()
     static Snf instance;
     _enabled = true;
     return instance;
+}
+
+void Snf::fire()
+{
+    Snf &sonoff = Snf::Get();
+    PubSubX &client = PubSubX::Get();
+    uint8_t sonoffi = sonoff.cmask() ? 255 : 128;
+    client.pub("res/sonoff", sonoff.reads(sonoffi));
 }
 
 bool Snf::enabled()
@@ -126,6 +135,7 @@ uint8_t Sonoff::writes(String extrw)
     if (extrw.isEmpty())
     {
 #ifdef ENABLE_SONOFF_EVENT
+        this->reset();
         _task.restart();
 #endif
         return false;
@@ -188,7 +198,6 @@ uint8_t Sonoff::press(uint64_t value)
 }
 
 #ifdef ENABLE_SONOFF_EVENT
-
 void Sonoff::taskSetup(Scheduler &ts, TaskCallback cb, uint32_t delay, bool check)
 {
     if (check && !_count)

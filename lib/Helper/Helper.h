@@ -30,3 +30,7 @@
 String uuid(String prefix);                        // Generate Random UUID With Prefix
 void str2mac(const char *macStr, uint8_t *macArr); // "8d-75-92-6a-40-e6"->uint8_t mac[6]
 void mac2str(const uint8_t *macArr, char *macStr); // uint8_t mac[6] -> "8d-75-92-6a-40-e6"
+
+#include <TaskSchedulerDeclarations.h>
+extern Task ledTask;
+void ledBlink();

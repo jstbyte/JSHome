@@ -50,6 +50,7 @@ class Snf : public Sonoff
 {
 public:
     static Snf &Get();
+    static void fire();
     static bool enabled();
 
 protected:

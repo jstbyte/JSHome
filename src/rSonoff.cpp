@@ -23,22 +23,6 @@ const char version[] = "v3.1.0";
 decode_results ir_result;
 Scheduler scheduler;
 IRrecv irrecv(IR);
-Task ledTask;
-
-void blinkLed()
-{
-    uint8_t state = !digitalRead(LED_BUILTIN);
-    digitalWrite(LED_BUILTIN, state);
-    if (state)
-        ledTask.delay(1995);
-}
-
-void sonoffire()
-{
-    Snf &sonoff = Snf::Get();
-    uint8_t sonoffi = sonoff.cmask() ? 255 : 128;
-    mqttClient.pub("res/sonoff", sonoff.reads(sonoffi));
-}
 
 void mqttCallback(char *tpk, byte *dta, uint32_t length)
 {
@@ -57,12 +41,11 @@ void onConnection(PubSubWiFi *)
     if (!mqttClient.connected())
         return (void)ledTask.enable();
 
-    if (Snf::enabled())
-        mqttClient.sub("req/sonoff");
-    mqttClient.sub("req/update");
     analogWrite(LED_BUILTIN, 254);
+    mqttClient.sub("req/sonoff");
+    mqttClient.sub("req/update");
+    Snf::Get().fire();
     ledTask.disable();
-    sonoffire();
     return;
 }
 
@@ -73,30 +56,24 @@ void setup()
     Serial.begin(115200);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-    ledTask.set(5, TASK_FOREVER, &blinkLed);
+    ledTask.set(5, TASK_FOREVER, &ledBlink);
     scheduler.addTask(ledTask);
-    ledTask.enable();
+    ledTask.enableDelayed();
 
     PubSubX &client = PubSubX::Get();
     client.setCallback(mqttCallback);
     client.onConnection(onConnection);
     client.init("/config.json", _emqxRCA);
 
-    if (LittleFS.exists("/sonoff.txt"))
-    {
-        Snf &sonoff = Snf::Get();
-        sonoff.begin("/sonoff.txt");
-        DEBUG_LOG_LN("SONOFF: pins found.");
-        sonoff.taskSetup(scheduler, &sonoffire, 1000, true);
-    }
+    (Snf::Get()).begin("/sonoff.txt");
+    (Snf::Get()).taskSetup(scheduler, &Snf::fire, 1000, true);
 }
 
 void loop()
 {
     if (irrecv.decode(&ir_result))
     {
-        if (Snf::enabled())
-            (Snf::Get()).press(ir_result.value);
+        (Snf::Get()).press(ir_result.value);
         irrecv.resume();
     }
 
