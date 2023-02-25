@@ -29,7 +29,7 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     auto topic = mqttClient.parse(tpk);
     auto data = mqttClient.parse(dta, length);
 
-    if (topic == "req/sonoff")
+    if (topic.startsWith("req/sonoff"))
         return (void)(Snf::Get()).writes(data);
 
     if (topic == "req/update")
@@ -42,6 +42,7 @@ void onConnection(PubSubWiFi *)
         return (void)ledTask.enable();
 
     analogWrite(LED_BUILTIN, 254);
+    mqttClient.sub("req/sonoff?");
     mqttClient.sub("req/sonoff");
     mqttClient.sub("req/update");
     Snf::Get().fire();
