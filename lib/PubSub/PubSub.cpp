@@ -8,43 +8,45 @@ PubSubX &PubSubX::Get()
 
 void PubSubWiFi::eventLoop()
 {
-    if (!loop())
+    if (state() == MQTT_CONNECTED)
     {
-        if (_timestamp < 2)
+        return (void)loop();
+    }
+
+    if (_timestamp < 2)
+    {
+        DEBUG_LOG_LN("MQTT: Disconnected.");
+        if (_timestamp == 1 && _onConnection)
+            _onConnection(this);
+        _timestamp = millis();
+        return;
+    }
+
+    if ((u32_t)(millis() - _timestamp) > MQTT_RETRY_MS)
+    {
+        if (WiFi.isConnected())
         {
-            DEBUG_LOG_LN("MQTT: Disconnected.");
-            if (_timestamp == 1 && _onConnection)
-                _onConnection(this);
-            _timestamp = millis();
-            return;
+            DEBUG_LOG("MQTT: {");
+            DEBUG_LOG(_retryCount);
+            DEBUG_LOG_LN("} Connecting...");
+            configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+            if (connect(uuid("ESP8266JST-").c_str()))
+            {
+                DEBUG_LOG_LN("MQTT: Connected.");
+                if (_onConnection)
+                    _onConnection(this);
+                _retryCount = 0;
+                _timestamp = 1;
+                return;
+            }
         }
 
-        if ((u32_t)(millis() - _timestamp) > MQTT_RETRY_MS)
+        _retryCount++;
+        _timestamp = millis();
+        if (_retryCount == _maxRetry && _retryCount > 0)
         {
-            if (WiFi.isConnected())
-            {
-                DEBUG_LOG("MQTT: {");
-                DEBUG_LOG(_retryCount);
-                DEBUG_LOG_LN("} Connecting...");
-                configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-                if (connect(uuid("ESP8266JST-").c_str()))
-                {
-                    DEBUG_LOG_LN("MQTT: Connected.");
-                    if (_onConnection)
-                        _onConnection(this);
-                    _retryCount = 0;
-                    _timestamp = 1;
-                    return;
-                }
-            }
-
-            _retryCount++;
-            _timestamp = millis();
-            if (_retryCount == _maxRetry && _retryCount > 0)
-            {
-                DEBUG_LOG_LN("MQTT: Maximum Retry Exceeds.");
-                _onRertyExceeds();
-            }
+            DEBUG_LOG_LN("MQTT: Maximum Retry Exceeds.");
+            _onRertyExceeds();
         }
     }
 }
