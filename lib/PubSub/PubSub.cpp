@@ -67,7 +67,7 @@ void PubSubWiFi::init(wlan_config_t *config, const char *pemCert)
     WiFi.setHostname(config->hostNAME.c_str());
 
     char *mqttHost = new char[config->mqttHOST.length() + 1];
-    strncpy(mqttHost, config->mqttHOST.c_str(), config->mqttHOST.length());
+    config->mqttHOST.toCharArray(mqttHost, config->mqttHOST.length() + 1);
 
     DEBUG_LOG("MQTT: & WiFi Initialized");
     if (config->mqttPORT == 8883)
