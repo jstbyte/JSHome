@@ -40,6 +40,7 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
 void onConnection(PubSubWiFi *)
 {
     mqttClient.sub("req/update");
+    fire();
 }
 
 void setup()
