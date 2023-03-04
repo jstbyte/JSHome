@@ -13,6 +13,7 @@
 PubSubX &mqttClient = PubSubX::Get();
 const char version[] = "v3.1.0";
 volatile uint8_t state = 0;
+bool synced = false;
 
 void fire()
 {
@@ -26,6 +27,7 @@ void fire()
     String topic = mqttClient.topic("power", true);
     if (mqttClient.publish(topic.c_str(), payload.c_str(), true))
         state = _state;
+    synced = true;
 }
 
 void mqttCallback(char *tpk, byte *dta, uint32_t length)
@@ -40,7 +42,8 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
 void onConnection(PubSubWiFi *)
 {
     mqttClient.sub("req/update");
-    fire();
+    if (!synced)
+        fire();
 }
 
 void setup()
