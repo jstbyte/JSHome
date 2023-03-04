@@ -29,7 +29,7 @@ void PubSubWiFi::eventLoop()
             DEBUG_LOG("MQTT: {");
             DEBUG_LOG(_retryCount);
             DEBUG_LOG_LN("} Connecting...");
-            configTime(5 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+            configTime(19800, 0, "pool.ntp.org", "time.nist.gov");
             if (connect(uuid("ESP8266JST-").c_str()))
             {
                 DEBUG_LOG_LN("MQTT: Connected.");
