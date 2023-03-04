@@ -9,9 +9,7 @@ PubSubX &PubSubX::Get()
 void PubSubWiFi::eventLoop()
 {
     if (state() == MQTT_CONNECTED)
-    {
         return (void)loop();
-    }
 
     if (_timestamp < 2)
     {
