@@ -15,7 +15,8 @@
 /* Sonoff:: Pin No. 13 Used By IR Reciver Sensor */
 /* data/sonoff.txt = `4:1;5:1;12:1;14:1` */
 
-const topics = [ // Regex Inside [...];
+const topics = [ // Regex [...];
+  {topic: 'power', payload: ``,}
   {topic: 'update', payload: `?{URL}`},
   {topic: 'sonoff', payload: `[index]:[state];...`}
 ]
