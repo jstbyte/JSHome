@@ -11,7 +11,7 @@
 #define DS 13
 
 PubSubX &mqttClient = PubSubX::Get();
-const char version[] = "v3.1.0";
+const char version[] = "v0.1.0";
 volatile uint8_t state = 0;
 bool synced = false;
 
