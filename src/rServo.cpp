@@ -13,7 +13,6 @@
 
 PubSubX &mqttClient = PubSubX::Get();
 const char version[] = "v1.0.0";
-uint8_t status = 255; // Unknown;
 Scheduler scheduler;
 EZServo servo(2);
 
@@ -25,8 +24,8 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     if (topic == "req/servo")
     {
         if (!data.isEmpty())
-            return servo.write(data.toInt());
-        mqttClient.pub("/res/servo", String(status));
+            servo.write(data.toInt());
+        return (void)mqttClient.pub("res/servo", String(servo.current()));
     }
 
     if (topic == "req/update")
