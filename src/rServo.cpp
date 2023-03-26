@@ -36,6 +36,7 @@ void onConnection(PubSubWiFi *)
 {
     mqttClient.sub("req/update");
     mqttClient.sub("req/servo");
+    mqttClient.pub("res/servo", String(servo.current()));
 }
 
 void setup()
