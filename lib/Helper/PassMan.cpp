@@ -1,5 +1,27 @@
 #include "PassMan.h"
 
+void playSciFiSuccessSound(uint8_t pin)
+{
+    tone(pin, 800, 50);   // First tone
+    delay(100);           // Pause between tones
+    tone(pin, 1200, 75);  // Second tone
+    delay(100);           // Pause between tones
+    tone(pin, 1600, 100); // Third tone
+    delay(100);           // Pause between tones
+}
+
+void playSciFiErrorSound(uint8_t pin)
+{
+    tone(pin, 700, 100); // First tone
+    delay(100);          // Pause between tones
+    tone(pin, 500, 125); // Second tone
+    delay(100);          // Pause between tones
+    tone(pin, 300, 150); // Third tone
+    delay(100);          // Pause between tones
+    tone(pin, 100, 175); // Fourth tone
+    delay(100);          // Pause between tones
+}
+
 String PassMan::buffer()
 {
     return _passbuff;
@@ -14,9 +36,11 @@ bool PassMan::press(char key)
 {
     if (space())
     {
+        tone(_beeppin, 2000, 50);
         _passbuff += key;
         return true;
     }
+    tone(_beeppin, 1000, 30);
     return false;
 }
 
@@ -59,14 +83,17 @@ bool PassMan::clear()
 {
     if (_passbuff.length() > 0)
     {
+        tone(_beeppin, 2000, 50);
         _passbuff.remove(_passbuff.length() - 1, 1);
         return true;
     }
+    tone(_beeppin, 1000, 30);
     return false;
 }
 
 bool PassMan::reset()
 {
+    tone(_beeppin, 2000, 50);
     if (_passbuff.isEmpty())
         return false;
 
@@ -76,5 +103,11 @@ bool PassMan::reset()
 
 bool PassMan::enter()
 {
-    return (_password == _passbuff);
+    if (_password == _passbuff)
+    {
+        playSciFiSuccessSound(_beeppin);
+        return true;
+    }
+    playSciFiErrorSound(_beeppin);
+    return false;
 }

@@ -6,11 +6,12 @@
 class PassMan
 {
 protected:
+    uint8_t _beeppin;
     String _password;
     String _passbuff;
 
 public:
-    PassMan(String password) : _password(password){};
+    PassMan(String password, uint8_t pin) : _beeppin(pin), _password(password){};
     String buffer();
     bool press(decode_results key);
     bool press(char key);
