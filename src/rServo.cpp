@@ -15,8 +15,8 @@
 
 PubSubX &mqttClient = PubSubX::Get();
 const char version[] = "v1.0.1";
+PassMan passman("0000", 14);
 decode_results ir_result;
-PassMan passman("2580", 14);
 Scheduler scheduler;
 EZServo servo(SP);
 IRrecv irrecv(13);
@@ -33,6 +33,15 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
         return (void)mqttClient.pub("res/servo", String(servo.current()));
     }
 
+    if (topic == "req/chpass")
+    {
+        bool res = passman.loads("/_password.txt", data);
+        return (void)mqttClient.pub("res/chpass", res ? "OK" : "ERROR");
+    }
+
+    if (topic == "req/info")
+        return (void)mqttClient.pub("res/servo", String(servo.current()));
+
     if (topic == "req/update")
         return (void)mqttClient.update(_firebaseRCA, data, version);
 }
@@ -41,6 +50,8 @@ void onConnection(PubSubWiFi *)
 {
     mqttClient.sub("req/update");
     mqttClient.sub("req/servo");
+    mqttClient.sub("req/chpass");
+    mqttClient.sub("req/info", true);
     mqttClient.pub("res/servo", String(servo.current()));
 }
 
@@ -53,6 +64,7 @@ void setup()
     client.onConnection(onConnection);
     client.init("/config.json", _emqxRCA);
     servo.taskSetup(scheduler, 10000);
+    passman.loads("/_password.txt");
     irrecv.enableIRIn();
     pinMode(14, OUTPUT);
 }

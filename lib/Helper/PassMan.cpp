@@ -27,6 +27,31 @@ String PassMan::buffer()
     return _passbuff;
 }
 
+bool PassMan::loads(String path, String password)
+{
+    if (password.isEmpty())
+    {
+        if (!LittleFS.exists(path))
+            return false;
+        File file = LittleFS.open(path, "r");
+        String pass = file.readString();
+        file.close();
+
+        if (pass.length() > 3)
+        {
+            _password = pass;
+            return true;
+        }
+        return false;
+    }
+
+    auto file = LittleFS.open(path, "w");
+    file.write(password.c_str());
+    _password = password;
+    file.close();
+    return true;
+}
+
 bool PassMan::space()
 {
     return _passbuff.length() < _password.length();
