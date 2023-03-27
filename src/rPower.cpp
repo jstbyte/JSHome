@@ -38,6 +38,9 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     if (topic.endsWith("req/power"))
         fire();
 
+    if (topic == "req/info")
+        fire();
+
     if (topic == "req/update")
         return (void)mqttClient.update(_firebaseRCA, data, version);
 }
@@ -46,6 +49,7 @@ void onConnection(PubSubWiFi *)
 {
     mqttClient.sub("req/power");
     mqttClient.sub("req/update");
+    mqttClient.sub("req/info", true);
     mqttClient.sub("req/power", true);
     if (mqttClient.state() == MQTT_CONNECTED)
     {

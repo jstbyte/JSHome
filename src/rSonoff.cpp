@@ -32,6 +32,9 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     if (topic.startsWith("req/sonoff"))
         return (void)(Snf::Get()).writes(data);
 
+    if (topic == "req/info")
+        return (void)(Snf::Get()).writes("");
+
     if (topic == "req/update")
         return (void)mqttClient.update(_firebaseRCA, data, version);
 }
@@ -41,6 +44,7 @@ void onConnection(PubSubWiFi *)
     if (!mqttClient.connected())
         return (void)ledTask.enable();
 
+    mqttClient.sub("req/info", true);
     analogWrite(LED_BUILTIN, 254);
     mqttClient.sub("req/sonoff?");
     mqttClient.sub("req/sonoff");
