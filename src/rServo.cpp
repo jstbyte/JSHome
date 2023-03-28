@@ -80,7 +80,7 @@ void loop()
         {
             if (ir_result.value == IR_EQ)
             {
-                if (passman.enter())
+                if (passman.enter() && servo.current() != 0)
                 {
                     servo.write(0);
                 }
@@ -89,7 +89,8 @@ void loop()
             else if (ir_result.value == IR_POWER)
             {
                 tone(14, 2000, 50);
-                servo.write(180);
+                if (servo.current() != 180)
+                    servo.write(180);
             }
         }
         irrecv.resume();
