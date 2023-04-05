@@ -3,6 +3,7 @@
 #include <LittleFS.h>
 #define SPIFFS LittleFS
 #include <TaskScheduler.h>
+#include <ezBuzzer.h>
 #include <EZServo.h>
 #include "PassMan.h"
 #include <PubSub.h>
@@ -14,8 +15,9 @@
 #define SP 2
 
 PubSubX &mqttClient = PubSubX::Get();
-const char version[] = "v1.0.1";
-PassMan passman("0000", 14);
+const char version[] = "v1.1.0";
+ezBuzzer buzzer(14); // Piezo Bz;
+PassMan passman("0000", &buzzer);
 decode_results ir_result;
 Scheduler scheduler;
 EZServo servo(SP);
@@ -66,13 +68,13 @@ void setup()
     servo.taskSetup(scheduler, 10000);
     passman.loads("/_password.txt");
     irrecv.enableIRIn();
-    pinMode(14, OUTPUT);
 }
 
 void loop()
 {
     mqttClient.eventLoop(); // Keep Alive;
     scheduler.execute();
+    buzzer.loop();
 
     if (irrecv.decode(&ir_result))
     {
@@ -88,7 +90,7 @@ void loop()
             }
             else if (ir_result.value == IR_POWER)
             {
-                tone(14, 2000, 50);
+                buzzer.beep(50);
                 if (servo.current() != 180)
                     servo.write(180);
             }

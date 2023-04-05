@@ -1,25 +1,17 @@
 #include "PassMan.h"
 
-void playSciFiSuccessSound(uint8_t pin)
-{
-    tone(pin, 800, 50);   // First tone
-    delay(100);           // Pause between tones
-    tone(pin, 1200, 75);  // Second tone
-    delay(100);           // Pause between tones
-    tone(pin, 1600, 100); // Third tone
-    delay(100);           // Pause between tones
-}
+int _invalid_m[] = {1000};
+int _invalid_d[] = {60};
+int _success_m[] = {2000, 3000, 4000, 5000, 6000};
+int _success_d[] = {16, 12, 6, 4, 2};
+int _error_mld[] = {NOTE_C5, 0, NOTE_C5, 0, NOTE_C5, 0, NOTE_C5, 0};
+int _error_dur[] = {4, 6, 4, 6, 4, 6, 4, 6};
 
-void playSciFiErrorSound(uint8_t pin)
+PassMan::PassMan(String password, ezBuzzer *buzzer)
 {
-    tone(pin, 700, 100); // First tone
-    delay(100);          // Pause between tones
-    tone(pin, 500, 125); // Second tone
-    delay(100);          // Pause between tones
-    tone(pin, 300, 150); // Third tone
-    delay(100);          // Pause between tones
-    tone(pin, 100, 175); // Fourth tone
-    delay(100);          // Pause between tones
+    _password = String(password);
+    _buzzer = buzzer;
+    _attempt = 0;
 }
 
 String PassMan::buffer()
@@ -61,11 +53,11 @@ bool PassMan::press(char key)
 {
     if (space())
     {
-        tone(_beeppin, 2000, 50);
+        _buzzer->beep(50);
         _passbuff += key;
         return true;
     }
-    tone(_beeppin, 1000, 30);
+    _buzzer->playMelody(_invalid_m, _invalid_d, 1);
     return false;
 }
 
@@ -77,6 +69,7 @@ bool PassMan::press(decode_results key)
         clear();
         return true;
     case IR_RPT:
+        _buzzer->beep(50);
         reset();
         return true;
     case IR_0:
@@ -108,17 +101,16 @@ bool PassMan::clear()
 {
     if (_passbuff.length() > 0)
     {
-        tone(_beeppin, 2000, 50);
+        _buzzer->beep(50);
         _passbuff.remove(_passbuff.length() - 1, 1);
         return true;
     }
-    tone(_beeppin, 1000, 30);
+    _buzzer->playMelody(_invalid_m, _invalid_d, 1);
     return false;
 }
 
 bool PassMan::reset()
 {
-    tone(_beeppin, 2000, 50);
     if (_passbuff.isEmpty())
         return false;
 
@@ -128,11 +120,31 @@ bool PassMan::reset()
 
 bool PassMan::enter()
 {
+    if (_passbuff.isEmpty())
+    {
+        _buzzer->playMelody(_invalid_m, _invalid_d, 1);
+        return false;
+    }
+
+    if (PASSMAN_MAX_ATTEMPT > 0 && _attempt >= PASSMAN_MAX_ATTEMPT)
+    {
+        if ((millis() - _timestamp) < PASSMAN_DELAY_MS)
+        {
+            _buzzer->beep(millis() - _timestamp);
+            return false;
+        }
+
+        _timestamp = millis();
+    }
+
     if (_password == _passbuff)
     {
-        playSciFiSuccessSound(_beeppin);
+        _buzzer->playMelody(_success_m, _success_d, 5);
+        _attempt = 0;
         return true;
     }
-    playSciFiErrorSound(_beeppin);
+
+    _buzzer->playMelody(_error_mld, _error_dur, 8);
+    _attempt += 1;
     return false;
 }
