@@ -14,6 +14,9 @@
 #include "spac.h"
 #define SP 2
 
+/* file required: data/_password.txt
+   chng password: [key/dev]/req/chpass */
+
 PubSubX &mqttClient = PubSubX::Get();
 const char version[] = "v1.1.0";
 ezBuzzer buzzer(14); // Piezo Bz;
