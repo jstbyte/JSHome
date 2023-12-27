@@ -1,5 +1,7 @@
 # Instructions!
 
+Dropped Suport of TLS for ESP8266 Memory Limitaion;
+
 ```ts
 /* data/config.json  */ {
   "identity": "secrat.domain.ext",
@@ -7,7 +9,7 @@
   "wlanPASS": "pass@sta",
   "hostNAME": "dev@name",
   "mqttHOST": "broker.emqx.io",
-  "mqttPORT": 8883
+  "mqttPORT": 1883 // TCP Only;
 }
 
 /* ( CA Cert Embaded Into Program Memory in certs.h 'maybe change in future' ) */
