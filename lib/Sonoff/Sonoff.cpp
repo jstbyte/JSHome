@@ -38,6 +38,27 @@ uint8_t *Sonoff::pins() // Geter
     return _pnums;
 }
 
+void Sonoff::init(String rw)
+{
+    char *token = strtok((char *)rw.c_str(), ";");
+    while (token != NULL)
+    {
+        unsigned short pin = 255;
+        unsigned short state = 255;
+        sscanf(token, "%hu:%hu", &pin, &state);
+
+        if (pin != 255 || state != 255)
+        {
+            pinMode(pin, OUTPUT);
+            digitalWrite(pin, state);
+            _pnums[_count] = pin;
+            _count++;
+        }
+
+        token = strtok(NULL, ";");
+    }
+}
+
 uint8_t Sonoff::begin(String path)
 {
     File file = LittleFS.open(path, "r");
@@ -90,13 +111,18 @@ uint8_t Sonoff::write(uint8_t index, uint8_t state, bool mask)
         return true;
     }
 
-    bool hasChanged = false;
-    for (uint8_t i = 0; i < _count; i++)
+    if (index == 128)
     {
-        hasChanged = write(i, state) || hasChanged;
+        bool hasChanged = false;
+        for (uint8_t i = 0; i < _count; i++)
+        {
+            hasChanged = write(i, state) || hasChanged;
+        }
+
+        return hasChanged;
     }
 
-    return hasChanged;
+    return false; // Invalid Index;
 }
 
 String Sonoff::reads(uint8_t index)

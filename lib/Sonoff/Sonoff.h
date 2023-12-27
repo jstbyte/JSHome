@@ -29,6 +29,7 @@ public:
     uint8_t count();                   // Get available pins count;
     uint8_t cmask();                   // Get  changed masked byte;
     uint8_t *pins();                   // Get IO pin numbers array;
+    void init(String rw);              // Init Pins from RW String;
     uint8_t begin(String path);        // Load & Init Pins from FS;
     uint8_t read(uint8_t index);       // Read pin state  by index;
     uint8_t write(SNOF_WRITE_ARG);     // Write Pin State By Index;
