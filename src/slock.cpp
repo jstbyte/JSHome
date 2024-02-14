@@ -1,4 +1,4 @@
-#ifdef rServo
+#ifdef SLOCK
 #include <Arduino.h>
 #include <LittleFS.h>
 #define SPIFFS LittleFS
@@ -17,8 +17,12 @@
 /* file required: data/_password.txt
    chng password: [key/dev]/req/chpass */
 
+#define MAX_PASSWORD_ATTEMPTS 7
+#define ATTEMPTS_BASE_DELAY 30000
+unsigned int attempts_delay = ATTEMPTS_BASE_DELAY;
+unsigned long attempts_timestamp = 0;
 PubSubX &mqttClient = PubSubX::Get();
-const char version[] = "v1.1.0";
+const char version[] = "v1.1.1";
 ezBuzzer buzzer(14); // Piezo Bz;
 PassMan passman("0000", &buzzer);
 decode_results ir_result;
@@ -40,7 +44,7 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
 
     if (topic == "req/chpass")
     {
-        bool res = passman.loads("/_password.txt", data);
+        bool res = passman.load("/_password.txt", data);
         return (void)mqttClient.pub("res/chpass", res ? "OK" : "ERROR");
     }
 
@@ -68,9 +72,47 @@ void setup()
     client.setCallback(mqttCallback);
     client.onConnection(onConnection);
     client.init("/config.json", _emqxRCA);
+    passman.load("/_password.txt", "0000");
     servo.taskSetup(scheduler, 10000);
-    passman.loads("/_password.txt");
     irrecv.enableIRIn();
+}
+
+void handleIRKeypad()
+{
+
+    if (attempts_timestamp > 0)
+    {
+        if (millis() - attempts_timestamp < attempts_delay)
+        {
+            return;
+        }
+
+        attempts_delay = ATTEMPTS_BASE_DELAY;
+        attempts_timestamp = 0;
+    }
+
+    if (!passman.press(ir_result))
+    {
+        if (ir_result.value == IR_POWER)
+        {
+            if (passman.isEmpty())
+            {
+                buzzer.beep(50);
+                if (servo.current() != 180)
+                    servo.write(180);
+            }
+            else if (passman.enter())
+            {
+                servo.write(0);
+            }
+            else if (passman.attempts() >= MAX_PASSWORD_ATTEMPTS)
+            {
+                buzzer.beep(attempts_delay);
+                attempts_timestamp = millis();
+            }
+            passman.reset();
+        }
+    }
 }
 
 void loop()
@@ -81,23 +123,7 @@ void loop()
 
     if (irrecv.decode(&ir_result))
     {
-        if (!passman.press(ir_result))
-        {
-            if (ir_result.value == IR_EQ)
-            {
-                if (passman.enter() && servo.current() != 0)
-                {
-                    servo.write(0);
-                }
-                passman.reset();
-            }
-            else if (ir_result.value == IR_POWER)
-            {
-                buzzer.beep(50);
-                if (servo.current() != 180)
-                    servo.write(180);
-            }
-        }
+        handleIRKeypad();
         irrecv.resume();
     }
 }

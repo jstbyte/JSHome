@@ -14,7 +14,7 @@ Dropped Suport of TLS for ESP8266 Memory Limitaion;
 
 /* ( CA Cert Embaded Into Program Memory in certs.h 'maybe change in future' ) */
 /* TOPIC FORMAT: `{SECRAT}/${DEVICE | *}/{req|res}/{SERVICES}#` */
-/* Sonoff:: Pin No. 13 Used By IR Reciver Sensor */
+/* SONOFF:: Pin No. 13 Used By IR Reciver Sensor */
 /* data/sonoff.txt = `4:1;5:1;12:1;14:1` */
 
 const topics = [ // Regex [...];

@@ -4,8 +4,6 @@
 #include <Arduino.h>
 #include <IRutils.h>
 #include "Helper.h"
-#define PASSMAN_DELAY_MS 30000
-#define PASSMAN_MAX_ATTEMPT 10
 
 class PassMan
 {
@@ -13,17 +11,19 @@ protected:
     String _password;
     String _passbuff;
     // SecureMode ON;
-    uint8_t _attempt;
+    uint8_t _attempts;
     ezBuzzer *_buzzer;
-    unsigned long long _timestamp;
 
 public:
+    bool isEmpty();
     String buffer();
+    uint8_t attempts();
     PassMan(String password, ezBuzzer *buzzer);
-    bool loads(String path, String password = "");
+    bool load(String path, String password);
+    void dump(String path, String password);
     bool press(decode_results key);
     bool press(char key);
-    bool space();
+    bool hasSpace();
     bool clear();
     bool reset();
     bool enter();

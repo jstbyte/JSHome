@@ -1,4 +1,4 @@
-#ifdef rPOWER
+#ifdef PWR
 #include <Arduino.h>
 #include <LittleFS.h>
 #define SPIFFS LittleFS

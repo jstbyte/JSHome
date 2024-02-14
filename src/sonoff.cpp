@@ -1,4 +1,4 @@
-#ifdef rSONOFF
+#ifdef SONOFF
 #include <Arduino.h>
 #include <LittleFS.h>
 #define SPIFFS LittleFS

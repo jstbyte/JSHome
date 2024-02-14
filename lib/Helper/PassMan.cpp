@@ -11,7 +11,12 @@ PassMan::PassMan(String password, ezBuzzer *buzzer)
 {
     _password = String(password);
     _buzzer = buzzer;
-    _attempt = 0;
+    _attempts = 0;
+}
+
+bool PassMan::isEmpty()
+{
+    return _passbuff.length() == 0;
 }
 
 String PassMan::buffer()
@@ -19,39 +24,48 @@ String PassMan::buffer()
     return _passbuff;
 }
 
-bool PassMan::loads(String path, String password)
+uint8_t PassMan::attempts()
 {
-    if (password.isEmpty())
-    {
-        if (!LittleFS.exists(path))
-            return false;
-        File file = LittleFS.open(path, "r");
-        String pass = file.readString();
-        file.close();
-
-        if (pass.length() > 3)
-        {
-            _password = pass;
-            return true;
-        }
-        return false;
-    }
-
-    auto file = LittleFS.open(path, "w");
-    file.write(password.c_str());
-    _password = password;
-    file.close();
-    return true;
+    return _attempts;
 }
 
-bool PassMan::space()
+bool PassMan::load(String path, String password)
+{
+
+    if (LittleFS.exists(path))
+    {
+        File file = LittleFS.open(path, "r");
+        String pass = file.readString();
+        _password = pass;
+        file.close();
+        return true;
+    }
+
+    if (!password.isEmpty())
+    {
+        dump(path, password);
+        return true;
+    }
+
+    return false;
+}
+
+void PassMan::dump(String path, String password)
+{
+    File file = LittleFS.open(path, "w");
+    _password = password; // Register;
+    file.write(password.c_str());
+    file.close();
+}
+
+bool PassMan::hasSpace()
 {
     return _passbuff.length() < _password.length();
 }
 
 bool PassMan::press(char key)
 {
-    if (space())
+    if (hasSpace())
     {
         _buzzer->beep(50);
         _passbuff += key;
@@ -126,25 +140,14 @@ bool PassMan::enter()
         return false;
     }
 
-    if (PASSMAN_MAX_ATTEMPT > 0 && _attempt >= PASSMAN_MAX_ATTEMPT)
-    {
-        if ((millis() - _timestamp) < PASSMAN_DELAY_MS)
-        {
-            _buzzer->beep(millis() - _timestamp);
-            return false;
-        }
-
-        _timestamp = millis();
-    }
-
     if (_password == _passbuff)
     {
         _buzzer->playMelody(_success_m, _success_d, 5);
-        _attempt = 0;
+        _attempts = 0;
         return true;
     }
 
     _buzzer->playMelody(_error_mld, _error_dur, 8);
-    _attempt += 1;
+    _attempts += 1;
     return false;
 }
