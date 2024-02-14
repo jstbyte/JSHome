@@ -37,6 +37,7 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
 
     if (topic == "req/servo")
     {
+        passman.clear();
         if (!data.isEmpty())
             servo.write(data.toInt());
         return (void)mqttClient.pub("res/servo", String(servo.current()));

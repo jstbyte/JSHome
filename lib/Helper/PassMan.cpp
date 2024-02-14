@@ -29,6 +29,11 @@ uint8_t PassMan::attempts()
     return _attempts;
 }
 
+void PassMan::clear()
+{
+    _attempts = 0;
+}
+
 bool PassMan::load(String path, String password)
 {
 
@@ -79,12 +84,9 @@ bool PassMan::press(decode_results key)
 {
     switch (key.value)
     {
-    case IR_USD:
-        clear();
-        return true;
-    case IR_RPT:
+    case IR_MUTE:
         _buzzer->beep(50);
-        reset();
+        reset(); // Pin;
         return true;
     case IR_0:
         return press('0');
@@ -111,7 +113,7 @@ bool PassMan::press(decode_results key)
     }
 }
 
-bool PassMan::clear()
+bool PassMan::backspace()
 {
     if (_passbuff.length() > 0)
     {

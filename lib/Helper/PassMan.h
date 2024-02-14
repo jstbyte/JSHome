@@ -15,6 +15,7 @@ protected:
     ezBuzzer *_buzzer;
 
 public:
+    void clear();
     bool isEmpty();
     String buffer();
     uint8_t attempts();
@@ -23,8 +24,8 @@ public:
     void dump(String path, String password);
     bool press(decode_results key);
     bool press(char key);
+    bool backspace();
     bool hasSpace();
-    bool clear();
     bool reset();
     bool enter();
 };
