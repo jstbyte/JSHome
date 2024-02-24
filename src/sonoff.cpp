@@ -15,7 +15,6 @@
 #include "Sonoff.h"
 #include "certs.h"
 #include <time.h>
-#include "spac.h"
 #define IR 13
 
 PubSubX &mqttClient = PubSubX::Get();

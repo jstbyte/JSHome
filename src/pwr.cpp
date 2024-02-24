@@ -7,7 +7,6 @@
 #include "Helper.h"
 #include "certs.h"
 #include <time.h>
-#include "spac.h"
 #define DS 13
 
 PubSubX &mqttClient = PubSubX::Get();

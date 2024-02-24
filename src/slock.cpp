@@ -11,7 +11,6 @@
 #include "Helper.h"
 #include "certs.h"
 #include <time.h>
-#include "spac.h"
 #define SP 2
 
 /* file required: data/_password.txt
