@@ -92,7 +92,7 @@ void PubSubWiFi::init(wlan_config_t *config, const char *pemCert)
 wlan_config_t PubSubWiFi::loadWlanConfig(String path)
 {
     wlan_config_t config;
-    StaticJsonDocument<256> wConfigDoc;
+    JsonDocument wConfigDoc;
     File configFile = LittleFS.open(path, "r");
     if (deserializeJson(wConfigDoc, configFile))
     {

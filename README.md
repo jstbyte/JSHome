@@ -9,7 +9,7 @@ Dropped Suport of TLS for ESP8266 Memory Limitaion;
   "wlanPASS": "pass@sta",
   "hostNAME": "dev@name",
   "mqttHOST": "broker.emqx.io",
-  "mqttPORT": 1883 // TCP Only;
+  "mqttPORT": 8883 // 1883;
 }
 
 /* ( CA Cert Embaded Into Program Memory in certs.h 'maybe change in future' ) */
