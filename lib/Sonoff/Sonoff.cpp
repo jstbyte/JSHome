@@ -15,7 +15,7 @@ void Snf::fire()
     Snf &sonoff = Snf::Get();
     PubSubX &client = PubSubX::Get();
     uint8_t sonoffi = sonoff.cmask() ? 255 : 128;
-    client.pub("res/sonoff", sonoff.reads(sonoffi));
+    client.pub("res/sonoff", sonoff.readJson(sonoffi));
 }
 
 bool Snf::enabled()
@@ -220,6 +220,73 @@ uint8_t Sonoff::press(uint64_t value)
     default:
         return false;
     }
+    return hasChanged;
+}
+
+String Sonoff::readJson(uint8_t index)
+{
+
+    JsonDocument doc; // Json Memory;
+    String data;      // Json   Data;
+
+    if (index < _count)
+    {
+
+        doc[String(index)] = read(index);
+        serializeJson(doc, data);
+        return data;
+    }
+
+    String result;
+
+    if (index == 255)
+    {
+        for (uint8_t i = 0; i < _count; i++)
+            if (_cmask & (1 << i)) // Check;
+                doc[String(i)] = read(i);
+
+        _cmask = 0; // Reset Changed Mask;
+        serializeJson(doc, data);
+        return data;
+    }
+
+    for (uint8_t i = 0; i < _count; i++)
+    {
+        doc[String(i)] = read(i);
+    }
+
+    serializeJson(doc, data);
+    return data;
+}
+
+uint8_t Sonoff::writeJson(String data)
+{
+
+    if (data.isEmpty())
+    {
+#ifdef ENABLE_SONOFF_EVENT
+        this->reset();
+        _task.restart();
+#endif
+        return false;
+    }
+
+    Serial.println(data);
+
+    JsonDocument doc;
+    bool hasChanged = false;
+
+    if (deserializeJson(doc, data))
+        return false;
+
+    for (JsonPair kv : doc.as<JsonObject>())
+    {
+        uint8_t index = String(kv.key().c_str()).toInt();
+        uint8_t state = String(kv.value()).toInt();
+
+        hasChanged = write(index, state) || hasChanged;
+    }
+
     return hasChanged;
 }
 

@@ -19,7 +19,7 @@
 
 PubSubX &mqttClient = PubSubX::Get();
 uint8_t manual_sw_pins[2] = {4, 5};
-const char version[] = "v3.2.0";
+const char version[] = "v4.0.0";
 decode_results ir_result;
 Task manual_sw_task;
 Scheduler scheduler;
@@ -44,11 +44,16 @@ void mqttCallback(char *tpk, byte *dta, uint32_t length)
     DEBUG_LOG("new message recived from:")
     DEBUG_LOG_LN(topic)
 
-    if (topic.startsWith("req/sonoff"))
+    if (topic == ("req/sonoff"))
         return (void)(Snf::Get()).writes(data);
 
-    if (topic == "req/info")
-        return (void)(Snf::Get()).writes("");
+    if (topic.startsWith("req/sonoff/"))
+    {
+        uint8_t index = topic.substring(11).toInt();
+        uint8_t state = data.toInt(); // Cast to Num;
+
+        return (void)(Snf::Get()).write(index, state);
+    }
 
     if (topic == "req/update")
         return (void)mqttClient.update(_firebaseRCA, data, version);
@@ -61,8 +66,8 @@ void onConnection(PubSubWiFi *)
 
     mqttClient.sub("req/info", true);
     analogWrite(LED_BUILTIN, 254);
-    mqttClient.sub("req/sonoff?");
     mqttClient.sub("req/sonoff");
+    mqttClient.sub("req/sonoff/+");
     mqttClient.sub("req/update");
     Snf::Get().fire();
     ledTask.disable();
